@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Torneo — Maldinis{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Crear Torneo</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="name">Nombre del torneo</label>
+            <input type="text" id="name" name="name" placeholder="Ej: Los Pibes" required autofocus>
+        </div>
+        <button type="submit" class="btn-primary">Crear</button>
+        <a href="{% url 'mis_torneos' %}" class="btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

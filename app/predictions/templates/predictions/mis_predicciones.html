@@ -1,4 +1,4 @@
-{% extends 'predictions/base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Mis predicciones — Mundial 2026{% endblock %}
 
@@ -228,7 +228,7 @@
 {% else %}
     <div class="empty-state">
         Todavía no cargaste ninguna predicción.<br>
-        <a href="{% url 'fixture' %}" style="color: var(--gold); text-decoration: none;">Ir al fixture →</a>
+        <a href="{% url 'fixture' tournament.id %}" style="color: var(--gold); text-decoration: none;">Ir al fixture →</a>
     </div>
 {% endif %}
 {% endblock %}

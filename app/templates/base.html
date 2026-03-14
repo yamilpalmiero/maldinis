@@ -186,17 +186,23 @@
 <body>
 
     <nav class="navbar">
-        <a href="{% url 'fixture' %}" class="navbar-brand">⚽ Mundial 2026</a>
+        <a href="{% url 'mis_torneos' %}" class="navbar-brand">⚽ Maldinis</a>
 
         <div class="navbar-links">
-            <a href="{% url 'fixture' %}">Fixture</a>
-            <a href="{% url 'mis_predicciones' %}">Mis predicciones</a>
-            <a href="{% url 'ranking' %}">Ranking</a>
+            {% if tournament %}
+                <a href="{% url 'fixture' tournament.id %}">Fixture</a>
+                <a href="{% url 'mis_predicciones' tournament.id %}">Mis predicciones</a>
+                <a href="{% url 'ranking' tournament.id %}">Ranking</a>
+            {% endif %}
+            <a href="{% url 'mis_torneos' %}">Mis Torneos</a>
         </div>
 
         <div class="navbar-user">
             <span>{{ request.user.username }}</span>
-            <a href="{% url 'logout' %}" class="btn-logout">Salir</a>
+            <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-logout">Salir</button>
+            </form>
         </div>
     </nav>
 
