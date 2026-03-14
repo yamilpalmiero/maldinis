@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mundial 2026{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #c9a227;
+            --gold-dim: #c9a22740;
+            --gold-subtle: #c9a22715;
+            --bg-base: #0a0e1a;
+            --bg-card: #131929;
+            --bg-card-hover: #1a2035;
+            --border: #ffffff12;
+            --border-gold: #c9a22730;
+            --text-primary: #ffffff;
+            --text-secondary: #ffffff70;
+            --text-muted: #ffffff35;
+            --radius: 10px;
+            --radius-sm: 6px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            font-family: 'Barlow', sans-serif;
+            font-size: 15px;
+            min-height: 100vh;
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            height: 56px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background-color: var(--bg-base);
+            z-index: 100;
+        }
+
+        .navbar-brand {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gold);
+            letter-spacing: 1px;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .navbar-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .navbar-links a:hover {
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        .navbar-links a.active {
+            color: var(--gold);
+            background: var(--gold-subtle);
+        }
+
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .navbar-user span {
+            color: var(--text-secondary);
+        }
+
+        .btn-logout {
+            color: var(--text-muted) !important;
+            font-size: 13px !important;
+            padding: 4px 10px !important;
+            border: 1px solid var(--border) !important;
+            border-radius: var(--radius-sm) !important;
+        }
+
+        .btn-logout:hover {
+            color: var(--text-primary) !important;
+            border-color: var(--border-gold) !important;
+            background: var(--gold-subtle) !important;
+        }
+
+        /* ── Layout principal ── */
+        .main-content {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* ── Título de sección ── */
+        .section-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gold);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        /* ── Botón primario ── */
+        .btn-primary {
+            background: var(--gold);
+            color: #0a0e1a;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 8px 20px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.85;
+        }
+
+        /* ── Mensajes de Django ── */
+        .messages {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .messages li {
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .messages li.success {
+            background: #1a3a2a;
+            border: 1px solid #2a6a4a;
+            color: #6fcf97;
+        }
+
+        .messages li.error {
+            background: #3a1a1a;
+            border: 1px solid #6a2a2a;
+            color: #eb5757;
+        }
+
+        .messages li.info {
+            background: var(--bg-card);
+            border: 1px solid var(--border-gold);
+            color: var(--gold);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="{% url 'fixture' %}" class="navbar-brand">⚽ Mundial 2026</a>
+
+        <div class="navbar-links">
+            <a href="{% url 'fixture' %}">Fixture</a>
+            <a href="{% url 'mis_predicciones' %}">Mis predicciones</a>
+            <a href="{% url 'ranking' %}">Ranking</a>
+        </div>
+
+        <div class="navbar-user">
+            <span>{{ request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="btn-logout">Salir</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

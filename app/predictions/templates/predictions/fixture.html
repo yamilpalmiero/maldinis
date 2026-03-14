@@ -1,0 +1,210 @@
+{% extends 'predictions/base.html' %}
+
+{% block title %}Fixture — Mundial 2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fixture-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 28px;
+    }
+
+    .fixture-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .fixture-subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    /* ── Grupo de fecha ── */
+    .date-group {
+        margin-bottom: 32px;
+    }
+
+    .date-label {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--gold);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 12px;
+    }
+
+    /* ── Tarjeta de partido ── */
+    .match-card {
+        background: var(--bg-card);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px 20px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: background 0.15s;
+    }
+
+    .match-card:hover {
+        background: var(--bg-card-hover);
+    }
+
+    .match-card.locked {
+        opacity: 0.5;
+    }
+
+    /* ── Equipos ── */
+    .team {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+    }
+
+    .team.away {
+        flex-direction: row-reverse;
+    }
+
+    .team-flag {
+        font-size: 22px;
+        line-height: 1;
+    }
+
+    .team-name {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    /* ── Área de score ── */
+    .score-area {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 110px;
+        justify-content: center;
+    }
+
+    .score-input {
+        background: var(--bg-base);
+        border: 1px solid var(--border-gold);
+        border-radius: var(--radius-sm);
+        width: 42px;
+        height: 42px;
+        text-align: center;
+        color: var(--gold);
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        transition: border-color 0.15s;
+        appearance: textfield;
+        -moz-appearance: textfield;
+    }
+
+    .score-input::-webkit-outer-spin-button,
+    .score-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+
+    .score-input:focus {
+        outline: none;
+        border-color: var(--gold);
+    }
+
+    .score-sep {
+        color: var(--text-muted);
+        font-size: 18px;
+        font-family: 'Barlow Condensed', sans-serif;
+    }
+
+    .score-locked {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-muted);
+        letter-spacing: 2px;
+    }
+
+    /* ── Hora del partido ── */
+    .match-time {
+        font-size: 12px;
+        color: var(--text-muted);
+        min-width: 42px;
+        text-align: right;
+    }
+
+    /* ── Botón guardar ── */
+    .fixture-footer {
+        margin-top: 32px;
+        display: flex;
+        justify-content: flex-end;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fixture-header">
+    <h1 class="fixture-title">Fixture</h1>
+    <span class="fixture-subtitle">Editá tus predicciones antes de cada partido</span>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+
+    {% for group in match_list_grouped %}
+        <div class="date-group">
+            <div class="date-label">{{ group.fecha|date:"l d \d\e F" }}</div>
+
+            {% for item in group.partidos %}
+                <div class="match-card {% if not item.editable %}locked{% endif %}">
+
+                    <div class="team home">
+                        <span class="team-flag">{{ item.match.home_team.flag }}</span>
+                        <span class="team-name">{{ item.match.home_team }}</span>
+                    </div>
+
+                    <div class="score-area">
+                        {% if item.editable %}
+                            <input class="score-input" type="number"
+                                   name="home_{{ item.match.id }}"
+                                   value="{{ item.goals_home }}"
+                                   min="0" max="20">
+                            <span class="score-sep">—</span>
+                            <input class="score-input" type="number"
+                                   name="away_{{ item.match.id }}"
+                                   value="{{ item.goals_away }}"
+                                   min="0" max="20">
+                        {% else %}
+                            <span class="score-locked">{{ item.goals_home }} : {{ item.goals_away }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="team away">
+                        <span class="team-flag">{{ item.match.away_team.flag }}</span>
+                        <span class="team-name">{{ item.match.away_team }}</span>
+                    </div>
+
+                    <div class="match-time">{{ item.match.match_datetime|date:"H:i" }}</div>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+
+    <div class="fixture-footer">
+        <button type="submit" class="btn-primary">Guardar predicciones</button>
+    </div>
+</form>
+{% endblock %}

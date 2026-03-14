@@ -1,0 +1,221 @@
+{% extends 'predictions/base.html' %}
+
+{% block title %}Ranking — Mundial 2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 28px;
+    }
+
+    .page-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .page-subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    /* ── Tabla de ranking ── */
+    .ranking-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .ranking-table thead tr {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .ranking-table th {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--gold);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 0 16px 12px;
+        text-align: left;
+    }
+
+    .ranking-table th.right {
+        text-align: right;
+    }
+
+    /* ── Filas ── */
+    .ranking-row {
+        border-bottom: 0.5px solid var(--border);
+        transition: background 0.15s;
+    }
+
+    .ranking-row:hover {
+        background: var(--bg-card-hover);
+    }
+
+    .ranking-row td {
+        padding: 14px 16px;
+        vertical-align: middle;
+    }
+
+    /* ── Posición ── */
+    .rank-pos {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-muted);
+        width: 40px;
+    }
+
+    .rank-pos.gold   { color: #c9a227; }
+    .rank-pos.silver { color: #aaaaaa; }
+    .rank-pos.bronze { color: #cd7f32; }
+
+    /* ── Avatar ── */
+    .rank-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+    }
+
+    .rank-avatar.gold   { border-color: var(--gold); color: var(--gold); }
+    .rank-avatar.silver { border-color: #aaaaaa;     color: #aaaaaa; }
+    .rank-avatar.bronze { border-color: #cd7f32;     color: #cd7f32; }
+
+    .avatar-cell {
+        width: 52px;
+    }
+
+    /* ── Nombre ── */
+    .rank-name {
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    /* ── Barra de progreso ── */
+    .bar-cell {
+        width: 35%;
+    }
+
+    .rank-bar {
+        height: 3px;
+        border-radius: 2px;
+        background: var(--gold-dim);
+        width: calc(var(--pct) / var(--max) * 100%);
+        transition: width 0.4s ease;
+    }
+
+    .rank-bar {
+        height: 3px;
+        border-radius: 2px;
+        background: var(--gold-dim);
+        transition: width 0.4s ease;
+    }
+
+    .rank-bar.gold   { background: var(--gold); }
+    .rank-bar.silver { background: #aaaaaa60; }
+    .rank-bar.bronze { background: #cd7f3260; }
+
+    /* ── Puntos ── */
+    .rank-pts {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .rank-pts.gold   { color: var(--gold); }
+    .rank-pts.silver { color: #aaaaaa; }
+    .rank-pts.bronze { color: #cd7f32; }
+
+    /* ── Fila del usuario actual ── */
+    .ranking-row.is-me {
+        background: var(--gold-subtle);
+    }
+
+    .ranking-row.is-me:hover {
+        background: var(--gold-subtle);
+    }
+
+    /* ── Estado vacío ── */
+    .empty-state {
+        text-align: center;
+        padding: 60px 0;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Ranking</h1>
+    <span class="page-subtitle">Posiciones generales</span>
+</div>
+
+{% if ranking_list %}
+    {% with max_pts=ranking_list.0.points %}
+    <table class="ranking-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th class="avatar-cell"></th>
+                <th>Jugador</th>
+                <th class="bar-cell"></th>
+                <th class="right">Puntos</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in ranking_list %}
+                <tr class="ranking-row {% if item.user == request.user %}is-me{% endif %}">
+                    <td class="rank-pos {{ item.medal }}">{{ item.position }}</td>
+                    <td class="avatar-cell">
+                        <div class="rank-avatar {{ item.medal }}">{{ item.initials }}</div>
+                    </td>
+                    <td class="rank-name">
+                        {{ item.user.username }}
+                        {% if item.user == request.user %}
+                            <span style="font-size:11px; color: var(--gold); margin-left: 6px;">tú</span>
+                        {% endif %}
+                    </td>
+                    <td class="bar-cell">
+                        <div class="rank-bar-wrap">
+                            {% if max_pts > 0 %}
+                                <div class="rank-bar {{ item.medal }}"
+                                    style="--pct: {{ item.points }}; --max: {{ max_pts }};"></div>
+                            {% else %}
+                                <div class="rank-bar" style="--pct: 0; --max: 1;"></div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="rank-pts {{ item.medal }}">{{ item.points }} pts</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endwith %}
+{% else %}
+    <div class="empty-state">
+        Todavía no hay puntos registrados.
+    </div>
+{% endif %}
+{% endblock %}

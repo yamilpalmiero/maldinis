@@ -1,0 +1,380 @@
+[
+    {
+        "model": "predictions.team",
+        "pk": 1,
+        "fields": {
+            "name": "México",
+            "code": "MEX",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 2,
+        "fields": {
+            "name": "Estados Unidos",
+            "code": "USA",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 3,
+        "fields": {
+            "name": "Canadá",
+            "code": "CAN",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 4,
+        "fields": {
+            "name": "Japón",
+            "code": "JPN",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 5,
+        "fields": {
+            "name": "Nueva Zelanda",
+            "code": "NZL",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 6,
+        "fields": {
+            "name": "Irán",
+            "code": "IRN",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 7,
+        "fields": {
+            "name": "Argentina",
+            "code": "ARG",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 8,
+        "fields": {
+            "name": "Brasil",
+            "code": "BRA",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 9,
+        "fields": {
+            "name": "Ecuador",
+            "code": "ECU",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 10,
+        "fields": {
+            "name": "Uruguay",
+            "code": "URU",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 11,
+        "fields": {
+            "name": "Paraguay",
+            "code": "PAR",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 12,
+        "fields": {
+            "name": "Colombia",
+            "code": "COL",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 13,
+        "fields": {
+            "name": "Uzbekistán",
+            "code": "UZB",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 14,
+        "fields": {
+            "name": "Corea del Sur",
+            "code": "KOR",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 15,
+        "fields": {
+            "name": "Jordania",
+            "code": "JOR",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 16,
+        "fields": {
+            "name": "Australia",
+            "code": "AUS",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 17,
+        "fields": {
+            "name": "Catar",
+            "code": "QAT",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 18,
+        "fields": {
+            "name": "Arabia Saudita",
+            "code": "KSA",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 19,
+        "fields": {
+            "name": "Marruecos",
+            "code": "MAR",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 20,
+        "fields": {
+            "name": "Túnez",
+            "code": "TUN",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 21,
+        "fields": {
+            "name": "Egipto",
+            "code": "EGY",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 22,
+        "fields": {
+            "name": "Argelia",
+            "code": "ALG",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 23,
+        "fields": {
+            "name": "Ghana",
+            "code": "GHA",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 24,
+        "fields": {
+            "name": "Cabo Verde",
+            "code": "CPV",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 25,
+        "fields": {
+            "name": "Sudáfrica",
+            "code": "RSA",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 26,
+        "fields": {
+            "name": "Costa de Marfil",
+            "code": "CIV",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 27,
+        "fields": {
+            "name": "Senegal",
+            "code": "SEN",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 28,
+        "fields": {
+            "name": "Inglaterra",
+            "code": "ENG",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 29,
+        "fields": {
+            "name": "Croacia",
+            "code": "CRO",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 30,
+        "fields": {
+            "name": "Francia",
+            "code": "FRA",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 31,
+        "fields": {
+            "name": "Portugal",
+            "code": "POR",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 32,
+        "fields": {
+            "name": "Noruega",
+            "code": "NOR",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 33,
+        "fields": {
+            "name": "Países Bajos",
+            "code": "NED",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 34,
+        "fields": {
+            "name": "Alemania",
+            "code": "GER",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 35,
+        "fields": {
+            "name": "Bélgica",
+            "code": "BEL",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 36,
+        "fields": {
+            "name": "Austria",
+            "code": "AUT",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 37,
+        "fields": {
+            "name": "España",
+            "code": "ESP",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 38,
+        "fields": {
+            "name": "Suiza",
+            "code": "SUI",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 39,
+        "fields": {
+            "name": "Escocia",
+            "code": "SCO",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 40,
+        "fields": {
+            "name": "Panamá",
+            "code": "PAN",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 41,
+        "fields": {
+            "name": "Curazao",
+            "code": "CUW",
+            "flag": ""
+        }
+    },
+    {
+        "model": "predictions.team",
+        "pk": 42,
+        "fields": {
+            "name": "Haití",
+            "code": "HAI",
+            "flag": ""
+        }
+    }
+]

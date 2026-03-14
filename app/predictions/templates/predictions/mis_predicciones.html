@@ -1,0 +1,234 @@
+{% extends 'predictions/base.html' %}
+
+{% block title %}Mis predicciones — Mundial 2026{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 28px;
+    }
+
+    .page-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .page-subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    /* ── Grupo de fecha ── */
+    .date-group {
+        margin-bottom: 32px;
+    }
+
+    .date-label {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--gold);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 12px;
+    }
+
+    /* ── Tarjeta de predicción ── */
+    .prediction-card {
+        background: var(--bg-card);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px 20px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-left: 3px solid transparent;
+    }
+
+    .prediction-card.pending {
+        border-left-color: var(--gold-dim);
+    }
+
+    .prediction-card.correct {
+        border-left-color: #2a6a4a;
+    }
+
+    .prediction-card.wrong {
+        border-left-color: #6a2a2a;
+    }
+
+    /* ── Equipos ── */
+    .teams {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .team-flag {
+        font-size: 20px;
+        line-height: 1;
+    }
+
+    .team-name {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .vs-sep {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin: 0 6px;
+    }
+
+    /* ── Scores ── */
+    .scores {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+    }
+
+    .score-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .score-label {
+        font-size: 10px;
+        color: var(--text-muted);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .score-value {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        letter-spacing: 2px;
+    }
+
+    .score-value.my-score {
+        color: var(--gold);
+    }
+
+    .score-divider {
+        width: 1px;
+        height: 32px;
+        background: var(--border);
+    }
+
+    /* ── Badge de puntos ── */
+    .points-badge {
+        min-width: 52px;
+        text-align: center;
+        padding: 6px 10px;
+        border-radius: var(--radius-sm);
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    .points-badge.pending {
+        background: var(--gold-subtle);
+        color: var(--gold);
+    }
+
+    .points-badge.pts-3 {
+        background: #1a3a2a;
+        color: #6fcf97;
+    }
+
+    .points-badge.pts-1 {
+        background: #1a2a3a;
+        color: #56b4f7;
+    }
+
+    .points-badge.pts-0 {
+        background: #3a1a1a;
+        color: #eb5757;
+    }
+
+    /* ── Estado vacío ── */
+    .empty-state {
+        text-align: center;
+        padding: 60px 0;
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Mis predicciones</h1>
+    <span class="page-subtitle">Tu historial de pronósticos</span>
+</div>
+
+{% if predictions_grouped %}
+    {% for group in predictions_grouped %}
+        <div class="date-group">
+            <div class="date-label">{{ group.fecha|date:"l d \d\e F" }}</div>
+
+            {% for item in group.predicciones %}
+                <div class="prediction-card {{ item.state }}">
+
+                    <div class="teams">
+                        <span class="team-flag">{{ item.prediction.match.home_team.flag }}</span>
+                        <span class="team-name">{{ item.prediction.match.home_team }}</span>
+                        <span class="vs-sep">vs</span>
+                        <span class="team-name">{{ item.prediction.match.away_team }}</span>
+                        <span class="team-flag">{{ item.prediction.match.away_team.flag }}</span>
+                    </div>
+
+                    <div class="scores">
+                        <div class="score-block">
+                            <span class="score-label">Mi pronóstico</span>
+                            <span class="score-value my-score">{{ item.prediction.goals_home }} — {{ item.prediction.goals_away }}</span>
+                        </div>
+
+                        {% if item.prediction.match.home_score is not None %}
+                            <div class="score-divider"></div>
+                            <div class="score-block">
+                                <span class="score-label">Resultado</span>
+                                <span class="score-value">{{ item.prediction.match.home_score }} — {{ item.prediction.match.away_score }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if item.prediction.points == None %}
+                        <div class="points-badge pending">—</div>
+                    {% elif item.prediction.points == 3 %}
+                        <div class="points-badge pts-3">3 pts</div>
+                    {% elif item.prediction.points == 1 %}
+                        <div class="points-badge pts-1">1 pt</div>
+                    {% else %}
+                        <div class="points-badge pts-0">0 pts</div>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        Todavía no cargaste ninguna predicción.<br>
+        <a href="{% url 'fixture' %}" style="color: var(--gold); text-decoration: none;">Ir al fixture →</a>
+    </div>
+{% endif %}
+{% endblock %}
