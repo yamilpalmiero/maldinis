@@ -1,6 +1,12 @@
-# 1. Librerias de terceros
+import secrets
+import string
 from django.db import models
 from django.contrib.auth.models import User
+
+
+def generate_invite_code():
+    alphabet = string.ascii_uppercase + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(8))
 
 
 class Tournament(models.Model):
@@ -8,6 +14,7 @@ class Tournament(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.PROTECT, related_name='created_tournaments')
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    invite_code = models.CharField(max_length=8, unique=True, default=generate_invite_code)
 
     def __str__(self):
         return self.name

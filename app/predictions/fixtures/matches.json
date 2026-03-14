@@ -1,0 +1,866 @@
+[
+    {
+        "model": "predictions.match",
+        "pk": 1,
+        "fields": {
+            "home_team": 1,
+            "away_team": 24,
+            "match_datetime": "2026-06-11T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 2,
+        "fields": {
+            "home_team": 13,
+            "away_team": 45,
+            "match_datetime": "2026-06-12T02:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 3,
+        "fields": {
+            "home_team": 3,
+            "away_team": 42,
+            "match_datetime": "2026-06-12T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 4,
+        "fields": {
+            "home_team": 2,
+            "away_team": 10,
+            "match_datetime": "2026-06-13T01:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 5,
+        "fields": {
+            "home_team": 15,
+            "away_team": 44,
+            "match_datetime": "2026-06-13T04:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 6,
+        "fields": {
+            "home_team": 16,
+            "away_team": 37,
+            "match_datetime": "2026-06-13T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 7,
+        "fields": {
+            "home_team": 7,
+            "away_team": 18,
+            "match_datetime": "2026-06-13T22:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 8,
+        "fields": {
+            "home_team": 41,
+            "away_team": 38,
+            "match_datetime": "2026-06-14T01:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 9,
+        "fields": {
+            "home_team": 33,
+            "away_team": 40,
+            "match_datetime": "2026-06-14T17:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 10,
+        "fields": {
+            "home_team": 32,
+            "away_team": 4,
+            "match_datetime": "2026-06-14T20:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 11,
+        "fields": {
+            "home_team": 25,
+            "away_team": 9,
+            "match_datetime": "2026-06-14T23:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 12,
+        "fields": {
+            "home_team": 43,
+            "away_team": 19,
+            "match_datetime": "2026-06-15T02:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 13,
+        "fields": {
+            "home_team": 36,
+            "away_team": 23,
+            "match_datetime": "2026-06-15T16:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 14,
+        "fields": {
+            "home_team": 34,
+            "away_team": 20,
+            "match_datetime": "2026-06-15T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 15,
+        "fields": {
+            "home_team": 17,
+            "away_team": 9,
+            "match_datetime": "2026-06-15T22:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 16,
+        "fields": {
+            "home_team": 5,
+            "away_team": 48,
+            "match_datetime": "2026-06-16T01:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 17,
+        "fields": {
+            "home_team": 29,
+            "away_team": 26,
+            "match_datetime": "2026-06-16T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 18,
+        "fields": {
+            "home_team": 47,
+            "away_team": 31,
+            "match_datetime": "2026-06-16T22:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 19,
+        "fields": {
+            "home_team": 6,
+            "away_team": 21,
+            "match_datetime": "2026-06-17T01:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 20,
+        "fields": {
+            "home_team": 35,
+            "away_team": 14,
+            "match_datetime": "2026-06-17T05:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 21,
+        "fields": {
+            "home_team": 30,
+            "away_team": 46,
+            "match_datetime": "2026-06-17T17:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 22,
+        "fields": {
+            "home_team": 27,
+            "away_team": 28,
+            "match_datetime": "2026-06-17T20:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 23,
+        "fields": {
+            "home_team": 22,
+            "away_team": 39,
+            "match_datetime": "2026-06-17T23:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 24,
+        "fields": {
+            "home_team": 11,
+            "away_team": 30,
+            "match_datetime": "2026-06-18T02:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 25,
+        "fields": {
+            "home_team": 45,
+            "away_team": 24,
+            "match_datetime": "2026-06-18T16:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 26,
+        "fields": {
+            "home_team": 37,
+            "away_team": 42,
+            "match_datetime": "2026-06-18T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 27,
+        "fields": {
+            "home_team": 3,
+            "away_team": 16,
+            "match_datetime": "2026-06-18T22:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 28,
+        "fields": {
+            "home_team": 1,
+            "away_team": 13,
+            "match_datetime": "2026-06-19T01:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 29,
+        "fields": {
+            "home_team": 44,
+            "away_team": 10,
+            "match_datetime": "2026-06-19T04:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 30,
+        "fields": {
+            "home_team": 2,
+            "away_team": 15,
+            "match_datetime": "2026-06-19T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 31,
+        "fields": {
+            "home_team": 38,
+            "away_team": 39,
+            "match_datetime": "2026-06-19T22:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 32,
+        "fields": {
+            "home_team": 7,
+            "away_team": 41,
+            "match_datetime": "2026-06-20T01:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 33,
+        "fields": {
+            "home_team": 19,
+            "away_team": 4,
+            "match_datetime": "2026-06-20T04:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 34,
+        "fields": {
+            "home_team": 32,
+            "away_team": 43,
+            "match_datetime": "2026-06-20T17:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 35,
+        "fields": {
+            "home_team": 33,
+            "away_team": 25,
+            "match_datetime": "2026-06-20T20:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 36,
+        "fields": {
+            "home_team": 8,
+            "away_team": 40,
+            "match_datetime": "2026-06-21T00:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 37,
+        "fields": {
+            "home_team": 36,
+            "away_team": 17,
+            "match_datetime": "2026-06-21T16:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 38,
+        "fields": {
+            "home_team": 34,
+            "away_team": 48,
+            "match_datetime": "2026-06-21T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 39,
+        "fields": {
+            "home_team": 9,
+            "away_team": 23,
+            "match_datetime": "2026-06-21T22:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 40,
+        "fields": {
+            "home_team": 5,
+            "away_team": 20,
+            "match_datetime": "2026-06-22T01:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 41,
+        "fields": {
+            "home_team": 6,
+            "away_team": 35,
+            "match_datetime": "2026-06-22T17:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 42,
+        "fields": {
+            "home_team": 29,
+            "away_team": 47,
+            "match_datetime": "2026-06-22T21:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 43,
+        "fields": {
+            "home_team": 31,
+            "away_team": 26,
+            "match_datetime": "2026-06-23T00:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 44,
+        "fields": {
+            "home_team": 14,
+            "away_team": 21,
+            "match_datetime": "2026-06-23T03:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 45,
+        "fields": {
+            "home_team": 30,
+            "away_team": 11,
+            "match_datetime": "2026-06-23T17:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 46,
+        "fields": {
+            "home_team": 27,
+            "away_team": 22,
+            "match_datetime": "2026-06-23T20:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 47,
+        "fields": {
+            "home_team": 39,
+            "away_team": 28,
+            "match_datetime": "2026-06-23T23:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 48,
+        "fields": {
+            "home_team": 46,
+            "away_team": 11,
+            "match_datetime": "2026-06-24T02:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 49,
+        "fields": {
+            "home_team": 37,
+            "away_team": 3,
+            "match_datetime": "2026-06-24T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 50,
+        "fields": {
+            "home_team": 42,
+            "away_team": 16,
+            "match_datetime": "2026-06-24T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 51,
+        "fields": {
+            "home_team": 38,
+            "away_team": 7,
+            "match_datetime": "2026-06-24T22:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 52,
+        "fields": {
+            "home_team": 18,
+            "away_team": 41,
+            "match_datetime": "2026-06-24T22:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 53,
+        "fields": {
+            "home_team": 45,
+            "away_team": 1,
+            "match_datetime": "2026-06-25T01:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 54,
+        "fields": {
+            "home_team": 24,
+            "away_team": 13,
+            "match_datetime": "2026-06-25T01:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 55,
+        "fields": {
+            "home_team": 40,
+            "away_team": 25,
+            "match_datetime": "2026-06-25T20:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 56,
+        "fields": {
+            "home_team": 8,
+            "away_team": 33,
+            "match_datetime": "2026-06-25T20:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 57,
+        "fields": {
+            "home_team": 4,
+            "away_team": 43,
+            "match_datetime": "2026-06-25T23:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 58,
+        "fields": {
+            "home_team": 19,
+            "away_team": 32,
+            "match_datetime": "2026-06-25T23:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 59,
+        "fields": {
+            "home_team": 44,
+            "away_team": 2,
+            "match_datetime": "2026-06-26T02:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 60,
+        "fields": {
+            "home_team": 10,
+            "away_team": 15,
+            "match_datetime": "2026-06-26T02:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 61,
+        "fields": {
+            "home_team": 31,
+            "away_team": 29,
+            "match_datetime": "2026-06-26T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 62,
+        "fields": {
+            "home_team": 26,
+            "away_team": 47,
+            "match_datetime": "2026-06-26T19:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 63,
+        "fields": {
+            "home_team": 23,
+            "away_team": 17,
+            "match_datetime": "2026-06-27T00:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 64,
+        "fields": {
+            "home_team": 9,
+            "away_team": 36,
+            "match_datetime": "2026-06-27T00:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 65,
+        "fields": {
+            "home_team": 20,
+            "away_team": 34,
+            "match_datetime": "2026-06-27T03:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 66,
+        "fields": {
+            "home_team": 5,
+            "away_team": 48,
+            "match_datetime": "2026-06-27T03:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 67,
+        "fields": {
+            "home_team": 39,
+            "away_team": 27,
+            "match_datetime": "2026-06-27T21:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 68,
+        "fields": {
+            "home_team": 28,
+            "away_team": 22,
+            "match_datetime": "2026-06-27T21:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 69,
+        "fields": {
+            "home_team": 11,
+            "away_team": 30,
+            "match_datetime": "2026-06-27T23:30:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 70,
+        "fields": {
+            "home_team": 46,
+            "away_team": 12,
+            "match_datetime": "2026-06-27T23:30:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 71,
+        "fields": {
+            "home_team": 21,
+            "away_team": 35,
+            "match_datetime": "2026-06-28T02:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    },
+    {
+        "model": "predictions.match",
+        "pk": 72,
+        "fields": {
+            "home_team": 14,
+            "away_team": 6,
+            "match_datetime": "2026-06-28T02:00:00Z",
+            "stage": "GROUP",
+            "home_score": null,
+            "away_score": null
+        }
+    }
+]
