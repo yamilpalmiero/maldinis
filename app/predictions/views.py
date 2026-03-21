@@ -24,14 +24,14 @@ def fixture(request, tournament_id):
             if match.match_datetime > timezone.now():
                 home_score = request.POST.get(f'home_{match.id}')
                 away_score = request.POST.get(f'away_{match.id}')
-                if home_score is not None and away_score is not None:
+                if home_score not in (None, '') and away_score not in (None, ''):
                     Prediction.objects.update_or_create(
                         user=request.user,
                         match=match,
                         tournament=tournament,
                         defaults={
-                            'home_score': home_score,
-                            'away_score': away_score,
+                            'home_score': int(home_score),
+                            'away_score': int(away_score),
                         }
                     )
         return redirect('fixture', tournament_id=tournament_id)
