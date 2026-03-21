@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Mundial 2026{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600&family=Barlow:wght@400;500&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --gold: #c9a227;
@@ -99,15 +102,18 @@
         }
 
         .btn-logout {
+            background: transparent !important;
             color: var(--text-muted) !important;
             font-size: 13px !important;
+            font-family: 'Barlow', sans-serif !important;
             padding: 4px 10px !important;
             border: 1px solid var(--border) !important;
             border-radius: var(--radius-sm) !important;
+            cursor: pointer !important;
         }
 
         .btn-logout:hover {
-            color: var(--text-primary) !important;
+            color: var(--text-secondary) !important;
             border-color: var(--border-gold) !important;
             background: var(--gold-subtle) !important;
         }
@@ -183,6 +189,7 @@
     </style>
     {% block extra_css %}{% endblock %}
 </head>
+
 <body>
 
     <nav class="navbar">
@@ -190,9 +197,9 @@
 
         <div class="navbar-links">
             {% if tournament %}
-                <a href="{% url 'fixture' tournament.id %}">Fixture</a>
-                <a href="{% url 'mis_predicciones' tournament.id %}">Mis predicciones</a>
-                <a href="{% url 'ranking' tournament.id %}">Ranking</a>
+            <a href="{% url 'fixture' tournament.id %}">Fixture</a>
+            <a href="{% url 'mis_predicciones' tournament.id %}">Mis predicciones</a>
+            <a href="{% url 'ranking' tournament.id %}">Ranking</a>
             {% endif %}
             <a href="{% url 'mis_torneos' %}">Mis Torneos</a>
         </div>
@@ -208,11 +215,11 @@
 
     <main class="main-content">
         {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li class="{{ message.tags }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
         {% endif %}
 
         {% block content %}{% endblock %}
@@ -220,4 +227,5 @@
 
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

@@ -2,9 +2,135 @@
 
 {% block title %}Mis Torneos — Maldinis{% endblock %}
 
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 32px;
+    }
+
+    .page-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    /* ── Tarjeta de torneo ── */
+    .torneos-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .torneo-card {
+        background: var(--bg-card);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        transition: background 0.15s;
+    }
+
+    .torneo-card:hover {
+        background: var(--bg-card-hover);
+    }
+
+    .torneo-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .torneo-name {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .torneo-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 4px;
+    }
+
+    .torneo-role {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--gold);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .torneo-code {
+        font-size: 11px;
+        color: var(--text-muted);
+        letter-spacing: 0.5px;
+    }
+
+    .torneo-code strong {
+        color: var(--text-secondary);
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        letter-spacing: 2px;
+    }
+
+    /* ── Links de acceso ── */
+    .torneo-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .torneo-actions a {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 6px 14px;
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        transition: color 0.15s, border-color 0.15s;
+    }
+
+    .torneo-actions a:hover {
+        color: var(--gold);
+        border-color: var(--border-gold);
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+        font-size: 15px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
-    <h1>Mis Torneos</h1>
+    <h1 class="page-title">Mis Torneos</h1>
     <div class="header-actions">
         <a href="{% url 'crear_torneo' %}" class="btn-primary">+ Crear torneo</a>
         <a href="{% url 'unirse_torneo' %}" class="btn-secondary">Unirse con código</a>
@@ -16,23 +142,23 @@
         {% for membership in memberships %}
         <div class="torneo-card">
             <div class="torneo-info">
-                <h2>{{ membership.tournament.name }}</h2>
-                <span class="torneo-role">{{ membership.get_role_display }}</span>
+                <div class="torneo-name">{{ membership.tournament.name }}</div>
+                <div class="torneo-meta">
+                    <span class="torneo-role">{{ membership.get_role_display }}</span>
+                    {% if membership.role == 'ADMIN' %}
+                        <span class="torneo-code">Código: <strong>{{ membership.tournament.invite_code }}</strong></span>
+                    {% endif %}
+                </div>
             </div>
             <div class="torneo-actions">
                 <a href="{% url 'fixture' membership.tournament.id %}">Fixture</a>
                 <a href="{% url 'ranking' membership.tournament.id %}">Ranking</a>
-                <a href="{% url 'mis_predicciones' membership.tournament.id %}">Mis predicciones</a>
+                <a href="{% url 'mis_predicciones' membership.tournament.id %}">Predicciones</a>
             </div>
-            {% if membership.role == 'ADMIN' %}
-            <div class="torneo-code">
-                Código de invitación: <strong>{{ membership.tournament.invite_code }}</strong>
-            </div>
-            {% endif %}
         </div>
         {% endfor %}
     </div>
 {% else %}
-    <p class="empty-state">No pertenecés a ningún torneo todavía. ¡Creá uno o unite con un código!</p>
+    <p class="empty-state">No pertenecés a ningún torneo todavía.<br>¡Creá uno o unite con un código!</p>
 {% endif %}
 {% endblock %}

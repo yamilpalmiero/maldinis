@@ -2,17 +2,102 @@
 
 {% block title %}Crear Torneo — Maldinis{% endblock %}
 
+{% block extra_css %}
+<style>
+    .form-wrap {
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .form-header {
+        margin-bottom: 32px;
+    }
+
+    .form-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .form-subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .form-card {
+        background: var(--bg-card);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .form-group input[type="text"] {
+        width: 100%;
+        background: var(--bg-base);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        color: var(--text-primary);
+        font-family: 'Barlow', sans-serif;
+        font-size: 15px;
+        transition: border-color 0.15s;
+    }
+
+    .form-group input[type="text"]:focus {
+        outline: none;
+        border-color: var(--gold);
+    }
+
+    .form-group input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.5;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 24px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="form-container">
-    <h1>Crear Torneo</h1>
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="name">Nombre del torneo</label>
-            <input type="text" id="name" name="name" placeholder="Ej: Los Pibes" required autofocus>
-        </div>
-        <button type="submit" class="btn-primary">Crear</button>
-        <a href="{% url 'mis_torneos' %}" class="btn-secondary">Cancelar</a>
-    </form>
+<div class="form-wrap">
+    <div class="form-header">
+        <h1 class="form-title">Crear Torneo</h1>
+        <p class="form-subtitle">Tu grupo recibirá un código de invitación para unirse.</p>
+    </div>
+
+    <div class="form-card">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name">Nombre del torneo</label>
+                <input type="text" id="name" name="name" placeholder="Ej: Los Pibes" required autofocus>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Crear torneo</button>
+                <a href="{% url 'mis_torneos' %}" class="btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

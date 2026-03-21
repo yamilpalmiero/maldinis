@@ -23,6 +23,11 @@ def crear_torneo(request):
             messages.error(request, 'El nombre del torneo no puede estar vacío.')
             return redirect('crear_torneo')
 
+        # Verificar nombre duplicado para este usuario
+        if Tournament.objects.filter(created_by=request.user, name__iexact=name).exists():
+            messages.error(request, f'Ya tenés un torneo llamado "{name}".')
+            return redirect('crear_torneo')
+
         tournament = Tournament.objects.create(
             name=name,
             created_by=request.user,

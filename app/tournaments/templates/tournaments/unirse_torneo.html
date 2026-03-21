@@ -2,17 +2,109 @@
 
 {% block title %}Unirse a un Torneo — Maldinis{% endblock %}
 
+{% block extra_css %}
+<style>
+    .form-wrap {
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .form-header {
+        margin-bottom: 32px;
+    }
+
+    .form-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .form-subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+
+    .form-card {
+        background: var(--bg-card);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .form-group input[type="text"] {
+        width: 100%;
+        background: var(--bg-base);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        color: var(--text-primary);
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        transition: border-color 0.15s;
+    }
+
+    .form-group input[type="text"]:focus {
+        outline: none;
+        border-color: var(--gold);
+    }
+
+    .form-group input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.4;
+        letter-spacing: 2px;
+        font-weight: 400;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 24px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="form-container">
-    <h1>Unirse a un Torneo</h1>
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="invite_code">Código de invitación</label>
-            <input type="text" id="invite_code" name="invite_code" placeholder="Ej: AX7K29BQ" required autofocus maxlength="8">
-        </div>
-        <button type="submit" class="btn-primary">Unirse</button>
-        <a href="{% url 'mis_torneos' %}" class="btn-secondary">Cancelar</a>
-    </form>
+<div class="form-wrap">
+    <div class="form-header">
+        <h1 class="form-title">Unirse a un Torneo</h1>
+        <p class="form-subtitle">Pedile el código de invitación al organizador del grupo.</p>
+    </div>
+
+    <div class="form-card">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="invite_code">Código de invitación</label>
+                <input type="text" id="invite_code" name="invite_code"
+                       placeholder="AX7K29BQ" required autofocus
+                       maxlength="8">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Unirse</button>
+                <a href="{% url 'mis_torneos' %}" class="btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

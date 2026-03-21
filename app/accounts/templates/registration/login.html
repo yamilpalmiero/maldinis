@@ -1,15 +1,170 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión — Maldinis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #0a0e1a;
+            color: #e8e8e8;
+            font-family: 'Barlow', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-card {
+            background: #13182a;
+            border: 0.5px solid #ffffff18;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .auth-logo-text {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: #c9a227;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .auth-logo-sub {
+            font-size: 12px;
+            color: #ffffff50;
+            letter-spacing: 1px;
+            margin-top: 4px;
+        }
+
+        h2 {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #e8e8e8;
+            margin-bottom: 24px;
+        }
+
+        .auth-card p {
+            margin-bottom: 16px;
+        }
+
+        .auth-card label {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            color: #ffffff70;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .auth-card input[type="text"],
+        .auth-card input[type="password"] {
+            width: 100%;
+            background: #0a0e1a;
+            border: 1px solid #ffffff20;
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: #e8e8e8;
+            font-family: 'Barlow', sans-serif;
+            font-size: 15px;
+            transition: border-color 0.15s;
+        }
+
+        .auth-card input[type="text"]:focus,
+        .auth-card input[type="password"]:focus {
+            outline: none;
+            border-color: #c9a227;
+        }
+
+        .auth-card ul {
+            list-style: none;
+            margin-top: 6px;
+        }
+
+        .auth-card ul li {
+            font-size: 12px;
+            color: #eb5757;
+            padding: 2px 0;
+        }
+
+        .btn-submit {
+            width: 100%;
+            margin-top: 24px;
+            background: #c9a227;
+            color: #0a0e1a;
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .btn-submit:hover { opacity: 0.85; }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #ffffff50;
+        }
+
+        .auth-footer a {
+            color: #c9a227;
+            text-decoration: none;
+        }
+
+        .auth-footer a:hover { text-decoration: underline; }
+
+        .errorlist {
+            list-style: none;
+            margin-top: 6px;
+        }
+
+        .errorlist li {
+            font-size: 12px;
+            color: #eb5757;
+        }
+    </style>
 </head>
 <body>
-    <h2>Iniciar sesión</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Entrar</button>
-    </form>
-    <p>¿No tenés cuenta? <a href="{% url 'registro' %}">Registrate</a></p>
+    <div class="auth-card">
+        <div class="auth-logo">
+            <div class="auth-logo-text">Maldinis</div>
+            <div class="auth-logo-sub">Mundial 2026</div>
+        </div>
+
+        <h2>Iniciar sesión</h2>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn-submit">Entrar</button>
+        </form>
+
+        <div class="auth-footer">
+            ¿No tenés cuenta? <a href="{% url 'registro' %}">Registrate</a>
+        </div>
+    </div>
 </body>
 </html>
