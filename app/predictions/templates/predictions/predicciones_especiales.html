@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Predicciones Especiales — {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="section-container">
+
+    <div class="section-header">
+        <h2 class="section-title">Predicciones Especiales</h2>
+        <p class="section-subtitle">{{ tournament.name }}</p>
+    </div>
+
+    {% if is_open %}
+    <p class="deadline-notice">
+        Podés modificar tus predicciones hasta el inicio de la fase eliminatoria
+        <strong>({{ deadline|date:"d/m/Y" }})</strong>.
+    </p>
+    {% else %}
+    <div class="alert alert-locked">
+        🔒 Las predicciones especiales están cerradas desde el inicio de la fase eliminatoria.
+    </div>
+    {% endif %}
+
+    <div class="special-cards">
+
+        <div class="special-card">
+            <div class="special-card-icon">🏆</div>
+            <div class="special-card-label">Balón de Oro</div>
+            <div class="special-card-desc">¿Quién será el mejor jugador del Mundial?</div>
+            {% if is_open %}
+            <input type="text" class="special-input" id="golden_ball_display" placeholder="Nombre del jugador"
+                value="{{ special.golden_ball|default:'' }}" autocomplete="off" />
+            {% else %}
+            <div class="special-value">
+                {{ special.golden_ball|default:"Sin predicción" }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="special-card">
+            <div class="special-card-icon">👟</div>
+            <div class="special-card-label">Bota de Oro</div>
+            <div class="special-card-desc">¿Quién será el máximo goleador del Mundial?</div>
+            {% if is_open %}
+            <input type="text" class="special-input" id="golden_boot_display" placeholder="Nombre del jugador"
+                value="{{ special.golden_boot|default:'' }}" autocomplete="off" />
+            {% else %}
+            <div class="special-value">
+                {{ special.golden_boot|default:"Sin predicción" }}
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    {% if is_open %}
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="golden_ball" id="golden_ball" value="{{ special.golden_ball|default:'' }}">
+        <input type="hidden" name="golden_boot" id="golden_boot" value="{{ special.golden_boot|default:'' }}">
+        <button type="submit" class="btn-primary btn-guardar">Guardar predicciones</button>
+    </form>
+    {% endif %}
+
+</div>
+
+{% if is_open %}
+<style>
+    .special-cards {
+        display: flex;
+        gap: 1.5rem;
+        margin: 2rem 0;
+        flex-wrap: wrap;
+    }
+
+    .special-card {
+        flex: 1;
+        min-width: 240px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        text-align: center;
+    }
+
+    .special-card-icon {
+        font-size: 2.5rem;
+    }
+
+    .special-card-label {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--gold);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .special-card-desc {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+
+    .special-input {
+        width: 100%;
+        background: var(--surface-raised);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        color: var(--text);
+        font-size: 1rem;
+        text-align: center;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .special-input:focus {
+        border-color: var(--gold);
+    }
+
+    .special-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .deadline-notice {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-locked {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1rem 1.5rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-guardar {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+</style>
+<script>
+    // Sincronizar inputs visuales con los hidden inputs del form
+    document.getElementById('golden_ball_display').addEventListener('input', function () {
+        document.getElementById('golden_ball').value = this.value;
+    });
+    document.getElementById('golden_boot_display').addEventListener('input', function () {
+        document.getElementById('golden_boot').value = this.value;
+    });
+</script>
+{% endif %}
+
+{% endblock %}
