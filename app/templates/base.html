@@ -149,6 +149,8 @@
             letter-spacing: 0.5px;
             text-transform: uppercase;
             cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
             transition: opacity 0.15s;
         }
 
@@ -196,13 +198,13 @@
         <a href="{% url 'mis_torneos' %}" class="navbar-brand">⚽ Maldinis</a>
 
         <div class="navbar-links">
+            <a href="{% url 'mis_torneos' %}">Mis Torneos</a>
             {% if tournament %}
             <a href="{% url 'fixture' tournament.id %}">Fixture</a>
             <a href="{% url 'mis_predicciones' tournament.id %}">Mis predicciones</a>
-            <a href="{% url 'ranking' tournament.id %}">Ranking</a>
             <a href="{% url 'predicciones_especiales' tournament.id %}">Especiales</a>
+            <a href="{% url 'ranking' tournament.id %}">Ranking</a>
             {% endif %}
-            <a href="{% url 'mis_torneos' %}">Mis Torneos</a>
         </div>
 
         <div class="navbar-user">

@@ -70,12 +70,27 @@ def fixture(request, tournament_id):
             }
         )
 
+    # Vista por grupo — solo partidos de fase de grupos con campo group definido
+    groups_order = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
+    by_group = {}
+    for item in match_list:
+        g = item["match"].group
+        if g:
+            if g not in by_group:
+                by_group[g] = []
+            by_group[g].append(item)
+
+    match_list_by_group = [
+        {"grupo": g, "partidos": by_group[g]} for g in groups_order if g in by_group
+    ]
+
     return render(
         request,
         "predictions/fixture.html",
         {
             "tournament": tournament,
             "match_list_grouped": match_list_grouped,
+            "match_list_by_group": match_list_by_group,
             "now": timezone.now(),
         },
     )

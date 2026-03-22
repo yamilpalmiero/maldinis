@@ -26,6 +26,28 @@
     }
 
     /* ── Tarjeta de torneo ── */
+    .btn-secondary {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 8px 20px;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        cursor: pointer;
+        text-decoration: none;
+        transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+
+    .btn-secondary:hover {
+        color: var(--gold);
+        border-color: var(--border-gold);
+        background: var(--gold-subtle);
+    }
+
     .torneos-list {
         display: flex;
         flex-direction: column;
@@ -138,27 +160,27 @@
 </div>
 
 {% if memberships %}
-    <div class="torneos-list">
-        {% for membership in memberships %}
-        <div class="torneo-card">
-            <div class="torneo-info">
-                <div class="torneo-name">{{ membership.tournament.name }}</div>
-                <div class="torneo-meta">
-                    <span class="torneo-role">{{ membership.get_role_display }}</span>
-                    {% if membership.role == 'ADMIN' %}
-                        <span class="torneo-code">Código: <strong>{{ membership.tournament.invite_code }}</strong></span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="torneo-actions">
-                <a href="{% url 'fixture' membership.tournament.id %}">Fixture</a>
-                <a href="{% url 'ranking' membership.tournament.id %}">Ranking</a>
-                <a href="{% url 'mis_predicciones' membership.tournament.id %}">Predicciones</a>
+<div class="torneos-list">
+    {% for membership in memberships %}
+    <div class="torneo-card">
+        <div class="torneo-info">
+            <div class="torneo-name">{{ membership.tournament.name }}</div>
+            <div class="torneo-meta">
+                <span class="torneo-role">{{ membership.get_role_display }}</span>
+                {% if membership.role == 'ADMIN' %}
+                <span class="torneo-code">Código: <strong>{{ membership.tournament.invite_code }}</strong></span>
+                {% endif %}
             </div>
         </div>
-        {% endfor %}
+        <div class="torneo-actions">
+            <a href="{% url 'fixture' membership.tournament.id %}">Fixture</a>
+            <a href="{% url 'ranking' membership.tournament.id %}">Ranking</a>
+            <a href="{% url 'mis_predicciones' membership.tournament.id %}">Predicciones</a>
+        </div>
     </div>
+    {% endfor %}
+</div>
 {% else %}
-    <p class="empty-state">No pertenecés a ningún torneo todavía.<br>¡Creá uno o unite con un código!</p>
+<p class="empty-state">No pertenecés a ningún torneo todavía.<br>¡Creá uno o unite con un código!</p>
 {% endif %}
 {% endblock %}

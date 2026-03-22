@@ -39,6 +39,7 @@ class Match(models.Model):
     )
     match_datetime = models.DateTimeField()
     stage = models.CharField(max_length=10, choices=Stage.choices, default=Stage.GROUP)
+    group = models.CharField(max_length=1, blank=True)  # A, B, C... L — solo fase de grupos
     home_score = models.PositiveSmallIntegerField(null=True, blank=True)
     away_score = models.PositiveSmallIntegerField(null=True, blank=True)
 

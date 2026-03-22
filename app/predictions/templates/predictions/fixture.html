@@ -6,9 +6,11 @@
 <style>
     .fixture-header {
         display: flex;
-        align-items: baseline;
+        align-items: center;
         justify-content: space-between;
         margin-bottom: 28px;
+        flex-wrap: wrap;
+        gap: 16px;
     }
 
     .fixture-title {
@@ -25,9 +27,40 @@
         color: var(--text-muted);
     }
 
-    /* ── Grupo de fecha ── */
+    /* ── Toggle ── */
+    .toggle-container {
+        display: flex;
+        align-items: center;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 4px;
+        gap: 2px;
+    }
+
+    .toggle-btn {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 14px;
+        cursor: pointer;
+        transition: color 0.15s, background 0.15s;
+    }
+
+    .toggle-btn.active {
+        background: var(--gold-subtle);
+        color: var(--gold);
+    }
+
+    /* ── Grupo de fecha / grupo ── */
     .date-group {
-        margin-bottom: 32px;
+        margin-bottom: 28px;
     }
 
     .date-label {
@@ -39,7 +72,19 @@
         text-transform: uppercase;
         padding-bottom: 10px;
         border-bottom: 1px solid var(--border);
-        margin-bottom: 12px;
+        margin-bottom: 10px;
+    }
+
+    /* ── Grid de partidos ── */
+    .matches-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-auto-rows: 52px;
+        gap: 8px 16px;
+    }
+
+    .matches-grid .match-card:last-child:nth-child(odd) {
+        grid-column: 1;
     }
 
     /* ── Tarjeta de partido ── */
@@ -47,12 +92,13 @@
         background: var(--bg-card);
         border: 0.5px solid var(--border);
         border-radius: var(--radius);
-        padding: 14px 20px;
-        margin-bottom: 8px;
+        padding: 0 14px;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 8px;
         transition: background 0.15s;
+        height: 52px;
+        overflow: hidden;
     }
 
     .match-card:hover {
@@ -64,36 +110,31 @@
     }
 
     /* ── Equipos ── */
-    .team {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex: 1;
-    }
-
-    .team.away {
-        flex-direction: row-reverse;
-    }
-
-    .team-flag {
-        font-size: 22px;
-        line-height: 1;
-    }
-
     .team-name {
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 17px;
+        font-size: 13px;
         font-weight: 600;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.3px;
         text-transform: uppercase;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .team-name.away {
+        text-align: right;
     }
 
     /* ── Área de score ── */
     .score-area {
         display: flex;
         align-items: center;
-        gap: 8px;
-        min-width: 110px;
+        gap: 4px;
+        flex-shrink: 0;
         justify-content: center;
     }
 
@@ -101,12 +142,12 @@
         background: var(--bg-base);
         border: 1px solid var(--border-gold);
         border-radius: var(--radius-sm);
-        width: 42px;
-        height: 42px;
+        width: 30px;
+        height: 30px;
         text-align: center;
         color: var(--gold);
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 20px;
+        font-size: 16px;
         font-weight: 600;
         transition: border-color 0.15s;
         appearance: textfield;
@@ -125,13 +166,13 @@
 
     .score-sep {
         color: var(--text-muted);
-        font-size: 18px;
+        font-size: 14px;
         font-family: 'Barlow Condensed', sans-serif;
     }
 
     .score-locked {
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 20px;
+        font-size: 15px;
         font-weight: 600;
         color: var(--text-muted);
         letter-spacing: 2px;
@@ -139,9 +180,10 @@
 
     /* ── Hora del partido ── */
     .match-time {
-        font-size: 12px;
+        font-size: 10px;
         color: var(--text-muted);
-        min-width: 42px;
+        flex-shrink: 0;
+        min-width: 32px;
         text-align: right;
     }
 
@@ -156,55 +198,92 @@
 
 {% block content %}
 <div class="fixture-header">
-    <h1 class="fixture-title">Fixture</h1>
-    <span class="fixture-subtitle">Editá tus predicciones antes de cada partido</span>
+    <div>
+        <h1 class="fixture-title">Fixture</h1>
+        <span class="fixture-subtitle">Editá tus predicciones antes de cada partido</span>
+    </div>
+    <div class="toggle-container">
+        <button class="toggle-btn active" id="btn-fecha" onclick="setView('fecha')">Por fecha</button>
+        <button class="toggle-btn" id="btn-grupo" onclick="setView('grupo')">Por grupo</button>
+    </div>
 </div>
 
 <form method="post">
     {% csrf_token %}
 
-    {% for group in match_list_grouped %}
+    {# Vista por fecha #}
+    <div id="view-fecha">
+        {% for group in match_list_grouped %}
         <div class="date-group">
             <div class="date-label">{{ group.fecha|date:"l d \d\e F" }}</div>
-
-            {% for item in group.partidos %}
+            <div class="matches-grid">
+                {% for item in group.partidos %}
                 <div class="match-card {% if not item.editable %}locked{% endif %}">
-
-                    <div class="team home">
-                        <span class="team-flag">{{ item.match.home_team.flag }}</span>
-                        <span class="team-name">{{ item.match.home_team }}</span>
-                    </div>
-
+                    <span class="team-name">{{ item.match.home_team }}</span>
                     <div class="score-area">
                         {% if item.editable %}
-                            <input class="score-input" type="number"
-                                   name="home_{{ item.match.id }}"
-                                   value="{{ item.home_score }}"
-                                   min="0" max="20">
-                            <span class="score-sep">—</span>
-                            <input class="score-input" type="number"
-                                   name="away_{{ item.match.id }}"
-                                   value="{{ item.away_score }}"
-                                   min="0" max="20">
+                        <input class="score-input" type="number" name="home_{{ item.match.id }}"
+                            value="{{ item.home_score }}" min="0" max="20">
+                        <span class="score-sep">—</span>
+                        <input class="score-input" type="number" name="away_{{ item.match.id }}"
+                            value="{{ item.away_score }}" min="0" max="20">
                         {% else %}
-                            <span class="score-locked">{{ item.home_score }} : {{ item.away_score }}</span>
+                        <span class="score-locked">{{ item.home_score }}:{{ item.away_score }}</span>
                         {% endif %}
                     </div>
-
-                    <div class="team away">
-                        <span class="team-flag">{{ item.match.away_team.flag }}</span>
-                        <span class="team-name">{{ item.match.away_team }}</span>
-                    </div>
-
-                    <div class="match-time">{{ item.match.match_datetime|date:"H:i" }}</div>
-
+                    <span class="team-name away">{{ item.match.away_team }}</span>
+                    <span class="match-time">{{ item.match.match_datetime|date:"H:i" }}</span>
                 </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
-    {% endfor %}
+        {% endfor %}
+    </div>
+
+    {# Vista por grupo #}
+    <div id="view-grupo" style="display:none;">
+        {% for group in match_list_by_group %}
+        <div class="date-group">
+            <div class="date-label">Grupo {{ group.grupo }}</div>
+            <div class="matches-grid">
+                {% for item in group.partidos %}
+                <div class="match-card {% if not item.editable %}locked{% endif %}">
+                    <span class="team-name">{{ item.match.home_team }}</span>
+                    <div class="score-area">
+                        {% if item.editable %}
+                        <input class="score-input" type="number" name="home_{{ item.match.id }}"
+                            value="{{ item.home_score }}" min="0" max="20">
+                        <span class="score-sep">—</span>
+                        <input class="score-input" type="number" name="away_{{ item.match.id }}"
+                            value="{{ item.away_score }}" min="0" max="20">
+                        {% else %}
+                        <span class="score-locked">{{ item.home_score }}:{{ item.away_score }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="team-name away">{{ item.match.away_team }}</span>
+                    <span class="match-time">{{ item.match.match_datetime|date:"H:i" }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 
     <div class="fixture-footer">
         <button type="submit" class="btn-primary">Guardar predicciones</button>
     </div>
 </form>
+
+<script>
+    function setView(view) {
+        document.getElementById('view-fecha').style.display = view === 'fecha' ? 'block' : 'none';
+        document.getElementById('view-grupo').style.display = view === 'grupo' ? 'block' : 'none';
+        document.getElementById('btn-fecha').classList.toggle('active', view === 'fecha');
+        document.getElementById('btn-grupo').classList.toggle('active', view === 'grupo');
+        localStorage.setItem('fixture_view', view);
+    }
+
+    const saved = localStorage.getItem('fixture_view');
+    if (saved) setView(saved);
+</script>
 {% endblock %}
