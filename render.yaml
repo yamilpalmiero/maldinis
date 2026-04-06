@@ -9,7 +9,8 @@ services:
     name: maldinis
     plan: free
     runtime: python
-    buildCommand: "pip install -r requirements.txt && python app/manage.py collectstatic --no-input && python app/manage.py migrate && python app/manage.py loaddata --app predictions teams && python app/manage.py loaddata --app predictions matches && python app/manage.py crear_superusuario"
+    buildCommand: "pip install -r requirements.txt && python app/manage.py collectstatic --no-input && python app/manage.py migrate && python app/manage.py loaddata app/predictions/fixtures/teams.json && python app/manage.py loaddata app/predictions/fixtures/matches.json && python app/manage.py crear_superusuario"
+    startCommand: "gunicorn --chdir app config.wsgi:application --bind 0.0.0.0:$PORT"
     envVars:
       - key: SECRET_KEY
         generateValue: true
