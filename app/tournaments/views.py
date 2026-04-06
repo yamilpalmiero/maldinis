@@ -1,17 +1,35 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+
+from predictions.models import SpecialPrediction
 from .models import Tournament, TournamentMember
 
 
 @login_required
 def mis_torneos(request):
-    memberships = TournamentMember.objects.filter(
+    memberships = list(TournamentMember.objects.filter(
         user=request.user
-    ).select_related('tournament')
+    ).select_related('tournament'))
+
+    tournament_ids = [m.tournament.id for m in memberships]
+
+    special_predictions = SpecialPrediction.objects.filter(
+        user=request.user,
+        tournament_id__in=tournament_ids
+    )
+    special_map = {sp.tournament_id: sp for sp in special_predictions}
+
+    memberships_data = []
+    for membership in memberships:
+        sp = special_map.get(membership.tournament.id)
+        memberships_data.append({
+            'membership': membership,
+            'special': sp,
+        })
 
     return render(request, 'tournaments/mis_torneos.html', {
-        'memberships': memberships,
+        'memberships_data': memberships_data,
     })
 
 
@@ -66,3 +84,20 @@ def unirse_torneo(request):
         return redirect('mis_torneos')
 
     return render(request, 'tournaments/unirse_torneo.html')
+
+@login_required
+def eliminar_torneo(request, tournament_id):
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+    membership = get_object_or_404(TournamentMember, tournament=tournament, user=request.user)
+
+    if membership.role != TournamentMember.Role.ADMIN:
+        messages.error(request, 'Solo el administrador puede eliminar el torneo.')
+        return redirect('mis_torneos')
+
+    if request.method == 'POST':
+        name = tournament.name
+        tournament.delete()
+        messages.success(request, f'Torneo "{name}" eliminado.')
+        return redirect('mis_torneos')
+
+    return redirect('mis_torneos')
