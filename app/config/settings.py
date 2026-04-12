@@ -10,11 +10,11 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-lb_6oyjo(g+6jgl1h*a_0
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    ".onrender.com",
-    "maldinis.app",
-    "www.maldinis.app",
+    'localhost',
+    '127.0.0.1',
+    'maldinis.onrender.com',
+    'maldinis.app',
+    'www.maldinis.app',
 ]
 
 INSTALLED_APPS = [
