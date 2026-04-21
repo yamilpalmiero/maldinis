@@ -112,7 +112,7 @@
     /* ── Equipos ── */
     .team-name {
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 600;
         letter-spacing: 0.3px;
         text-transform: uppercase;
@@ -120,13 +120,16 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        display: block;
-        flex: 1;
+        flex: 1 1 0;
         min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: flex-end;
     }
 
     .team-name.away {
-        text-align: right;
+        justify-content: flex-start;
     }
 
     /* ── Área de score ── */
@@ -219,7 +222,7 @@
             <div class="matches-grid">
                 {% for item in group.partidos %}
                 <div class="match-card {% if not item.editable %}locked{% endif %}">
-                    <span class="team-name">{{ item.match.home_team }}</span>
+                    <span class="team-name">{{ item.match.home_team.name }} {{ item.match.home_team.flag }}</span>
                     <div class="score-area">
                         {% if item.editable %}
                         <input class="score-input" type="number" name="home_{{ item.match.id }}"
@@ -231,7 +234,7 @@
                         <span class="score-locked">{{ item.home_score }}:{{ item.away_score }}</span>
                         {% endif %}
                     </div>
-                    <span class="team-name away">{{ item.match.away_team }}</span>
+                    <span class="team-name away">{{ item.match.away_team.flag }} {{ item.match.away_team.name }}</span>
                     <span class="match-time">{{ item.match.match_datetime|date:"H:i" }}</span>
                 </div>
                 {% endfor %}
@@ -248,7 +251,7 @@
             <div class="matches-grid">
                 {% for item in group.partidos %}
                 <div class="match-card {% if not item.editable %}locked{% endif %}">
-                    <span class="team-name">{{ item.match.home_team }}</span>
+                    <span class="team-name">{{ item.match.home_team.name }} {{ item.match.home_team.flag }}</span>
                     <div class="score-area">
                         {% if item.editable %}
                         <input class="score-input" type="number" name="home_{{ item.match.id }}"
@@ -260,7 +263,7 @@
                         <span class="score-locked">{{ item.home_score }}:{{ item.away_score }}</span>
                         {% endif %}
                     </div>
-                    <span class="team-name away">{{ item.match.away_team }}</span>
+                    <span class="team-name away">{{ item.match.away_team.flag }} {{ item.match.away_team.name }}</span>
                     <span class="match-time">{{ item.match.match_datetime|date:"H:i" }}</span>
                 </div>
                 {% endfor %}

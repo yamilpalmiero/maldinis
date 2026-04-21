@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Reglamento — Maldinis{% endblock %}
+
+{% block content %}
+<div style="max-width: 640px; margin: 0 auto;">
+    <h1 style="font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+        Reglamento
+    </h1>
+    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 28px;">
+        Cómo funciona Maldinis.
+    </p>
+
+    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 20px;">
+        <h2 class="section-title">Puntuación de partidos</h2>
+        <ul class="rules-list" style="margin-bottom: 24px;">
+            <li>
+                <span>Resultado exacto</span>
+                <span class="rule-points">3 pts</span>
+            </li>
+            <li>
+                <span>Acertar solo el ganador (o empate)</span>
+                <span class="rule-points">1 pt</span>
+            </li>
+            <li>
+                <span>No predecir o fallar</span>
+                <span class="rule-points">0 pts</span>
+            </li>
+        </ul>
+
+        <h2 class="section-title">Predicciones especiales</h2>
+        <ul class="rules-list">
+            <li>
+                <span>Acertar el Balón de Oro</span>
+                <span class="rule-points">10 pts</span>
+            </li>
+            <li>
+                <span>Acertar la Bota de Oro</span>
+                <span class="rule-points">5 pts</span>
+            </li>
+        </ul>
+    </div>
+
+    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 20px;">
+        <h2 class="section-title">Plazos</h2>
+        <ul class="rules-list">
+            <li>
+                <span>Fixture</span>
+                <span style="color: var(--text-secondary); font-size: 13px; text-align: right;">Cada partido cierra al comenzar</span>
+            </li>
+            <li>
+                <span>Predicciones especiales</span>
+                <span style="color: var(--text-secondary); font-size: 13px; text-align: right;">Hasta el inicio de la fase eliminatoria</span>
+            </li>
+        </ul>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: 16px;">
+            Podés editar tus predicciones todas las veces que quieras antes del cierre.
+        </p>
+    </div>
+
+    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px;">
+        <h2 class="section-title">Desempate en el ranking</h2>
+        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
+            Si dos o más participantes terminan con los mismos puntos, gana quien haya acertado más resultados exactos (3 pts).
+        </p>
+    </div>
+</div>
+{% endblock %}

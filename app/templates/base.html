@@ -57,6 +57,12 @@
             z-index: 100;
         }
 
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
         .navbar-brand {
             font-family: 'Barlow Condensed', sans-serif;
             font-size: 18px;
@@ -65,6 +71,14 @@
             letter-spacing: 1px;
             text-decoration: none;
             text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-icon {
+            width: 22px;
+            height: 22px;
         }
 
         .navbar-links {
@@ -73,7 +87,8 @@
             gap: 4px;
         }
 
-        .navbar-links a {
+        .navbar-links a,
+        .navbar-rules {
             color: var(--text-secondary);
             text-decoration: none;
             font-size: 14px;
@@ -82,7 +97,8 @@
             transition: color 0.15s, background 0.15s;
         }
 
-        .navbar-links a:hover {
+        .navbar-links a:hover,
+        .navbar-rules:hover {
             color: var(--text-primary);
             background: var(--bg-card);
         }
@@ -161,6 +177,30 @@
             opacity: 0.85;
         }
 
+        /* ── Botón secundario ── */
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 8px 20px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: color 0.15s, background 0.15s, border-color 0.15s;
+        }
+
+        .btn-secondary:hover {
+            color: var(--text-primary);
+            background: var(--bg-card-hover);
+            border-color: var(--border-gold);
+        }
+
         /* ── Mensajes de Django ── */
         .messages {
             list-style: none;
@@ -191,6 +231,101 @@
             border: 1px solid var(--border-gold);
             color: var(--gold);
         }
+
+        /* ── Listas de reglas (modal y reglamento) ── */
+        .rules-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .rules-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .rules-list li:last-child {
+            border-bottom: none;
+        }
+
+        .rule-points {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gold);
+            white-space: nowrap;
+        }
+
+        /* ── Modal de reglas ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-gold);
+            border-radius: var(--radius);
+            padding: 32px;
+            max-width: 520px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            accent-color: var(--gold);
+            cursor: pointer;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -198,7 +333,14 @@
 <body>
 
     <nav class="navbar">
-        <a href="{% url 'mis_torneos' %}" class="navbar-brand">⚽ Maldinis</a>
+        <div class="navbar-left">
+            <a href="{% url 'mis_torneos' %}" class="navbar-brand">
+                <img src="{% static 'favicon.svg' %}" alt="" class="brand-icon"> Maldinis
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'reglamento' %}" class="navbar-rules">Reglamento</a>
+            {% endif %}
+        </div>
 
         <div class="navbar-links">
             <a href="{% url 'mis_torneos' %}">Mis Torneos</a>
@@ -230,6 +372,63 @@
 
         {% block content %}{% endblock %}
     </main>
+
+    {% if user.is_authenticated and show_rules_modal %}
+    <div class="modal-overlay open" id="rules-modal">
+        <div class="modal-card">
+            <h2 class="modal-title">¡Bienvenido a Maldinis!</h2>
+            <p class="modal-subtitle">Así se puntúan tus predicciones:</p>
+
+            <ul class="rules-list">
+                <li>
+                    <span>Resultado exacto del partido</span>
+                    <span class="rule-points">3 pts</span>
+                </li>
+                <li>
+                    <span>Acertar solo el ganador (o empate)</span>
+                    <span class="rule-points">1 pt</span>
+                </li>
+                <li>
+                    <span>Acertar el Balón de Oro</span>
+                    <span class="rule-points">10 pts</span>
+                </li>
+                <li>
+                    <span>Acertar la Bota de Oro</span>
+                    <span class="rule-points">5 pts</span>
+                </li>
+            </ul>
+
+            <p style="color: var(--text-muted); font-size: 13px; margin-top: 20px; line-height: 1.5;">
+                Cada partido se cierra al comenzar. Las predicciones especiales cierran al inicio de la fase eliminatoria.
+            </p>
+            <p style="color: var(--text-muted); font-size: 13px; margin-top: 12px; line-height: 1.5;">
+                Si marcás "No volver a mostrar", siempre podrás consultar el reglamento desde el enlace en la parte superior izquierda.
+            </p>
+
+            <div class="modal-footer">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="dont-show-again"> No volver a mostrar
+                </label>
+                <button type="button" class="btn-primary" onclick="cerrarModalReglas()">Entendido</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        function cerrarModalReglas() {
+            const dontShow = document.getElementById('dont-show-again').checked;
+            if (dontShow) {
+                fetch("{% url 'marcar_reglas_vistas' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                });
+            }
+            document.getElementById('rules-modal').classList.remove('open');
+        }
+    </script>
+    {% endif %}
 
     {% block extra_js %}{% endblock %}
 </body>
