@@ -5,7 +5,7 @@
         "fields": {
             "name": "México",
             "code": "MEX",
-            "flag": ""
+            "flag": "🇲🇽"
         }
     },
     {
@@ -14,7 +14,7 @@
         "fields": {
             "name": "Estados Unidos",
             "code": "USA",
-            "flag": ""
+            "flag": "🇺🇸"
         }
     },
     {
@@ -23,7 +23,7 @@
         "fields": {
             "name": "Canadá",
             "code": "CAN",
-            "flag": ""
+            "flag": "🇨🇦"
         }
     },
     {
@@ -32,7 +32,7 @@
         "fields": {
             "name": "Japón",
             "code": "JPN",
-            "flag": ""
+            "flag": "🇯🇵"
         }
     },
     {
@@ -41,7 +41,7 @@
         "fields": {
             "name": "Nueva Zelanda",
             "code": "NZL",
-            "flag": ""
+            "flag": "🇳🇿"
         }
     },
     {
@@ -50,7 +50,7 @@
         "fields": {
             "name": "Argentina",
             "code": "ARG",
-            "flag": ""
+            "flag": "🇦🇷"
         }
     },
     {
@@ -59,7 +59,7 @@
         "fields": {
             "name": "Brasil",
             "code": "BRA",
-            "flag": ""
+            "flag": "🇧🇷"
         }
     },
     {
@@ -68,7 +68,7 @@
         "fields": {
             "name": "Ecuador",
             "code": "ECU",
-            "flag": ""
+            "flag": "🇪🇨"
         }
     },
     {
@@ -77,7 +77,7 @@
         "fields": {
             "name": "Uruguay",
             "code": "URU",
-            "flag": ""
+            "flag": "🇺🇾"
         }
     },
     {
@@ -86,7 +86,7 @@
         "fields": {
             "name": "Paraguay",
             "code": "PAR",
-            "flag": ""
+            "flag": "🇵🇾"
         }
     },
     {
@@ -95,7 +95,7 @@
         "fields": {
             "name": "Colombia",
             "code": "COL",
-            "flag": ""
+            "flag": "🇨🇴"
         }
     },
     {
@@ -104,7 +104,7 @@
         "fields": {
             "name": "Uzbekistán",
             "code": "UZB",
-            "flag": ""
+            "flag": "🇺🇿"
         }
     },
     {
@@ -113,7 +113,7 @@
         "fields": {
             "name": "Corea del Sur",
             "code": "KOR",
-            "flag": ""
+            "flag": "🇰🇷"
         }
     },
     {
@@ -122,7 +122,7 @@
         "fields": {
             "name": "Jordania",
             "code": "JOR",
-            "flag": ""
+            "flag": "🇯🇴"
         }
     },
     {
@@ -131,7 +131,7 @@
         "fields": {
             "name": "Australia",
             "code": "AUS",
-            "flag": ""
+            "flag": "🇦🇺"
         }
     },
     {
@@ -140,7 +140,7 @@
         "fields": {
             "name": "Catar",
             "code": "QAT",
-            "flag": ""
+            "flag": "🇶🇦"
         }
     },
     {
@@ -149,7 +149,7 @@
         "fields": {
             "name": "Arabia Saudita",
             "code": "KSA",
-            "flag": ""
+            "flag": "🇸🇦"
         }
     },
     {
@@ -158,7 +158,7 @@
         "fields": {
             "name": "Marruecos",
             "code": "MAR",
-            "flag": ""
+            "flag": "🇲🇦"
         }
     },
     {
@@ -167,7 +167,7 @@
         "fields": {
             "name": "Túnez",
             "code": "TUN",
-            "flag": ""
+            "flag": "🇹🇳"
         }
     },
     {
@@ -176,7 +176,7 @@
         "fields": {
             "name": "Egipto",
             "code": "EGY",
-            "flag": ""
+            "flag": "🇪🇬"
         }
     },
     {
@@ -185,7 +185,7 @@
         "fields": {
             "name": "Argelia",
             "code": "ALG",
-            "flag": ""
+            "flag": "🇩🇿"
         }
     },
     {
@@ -194,7 +194,7 @@
         "fields": {
             "name": "Ghana",
             "code": "GHA",
-            "flag": ""
+            "flag": "🇬🇭"
         }
     },
     {
@@ -203,7 +203,7 @@
         "fields": {
             "name": "Cabo Verde",
             "code": "CPV",
-            "flag": ""
+            "flag": "🇨🇻"
         }
     },
     {
@@ -212,7 +212,7 @@
         "fields": {
             "name": "Sudáfrica",
             "code": "RSA",
-            "flag": ""
+            "flag": "🇿🇦"
         }
     },
     {
@@ -221,7 +221,7 @@
         "fields": {
             "name": "Costa de Marfil",
             "code": "CIV",
-            "flag": ""
+            "flag": "🇨🇮"
         }
     },
     {
@@ -230,7 +230,7 @@
         "fields": {
             "name": "Senegal",
             "code": "SEN",
-            "flag": ""
+            "flag": "🇸🇳"
         }
     },
     {
@@ -239,7 +239,7 @@
         "fields": {
             "name": "Inglaterra",
             "code": "ENG",
-            "flag": ""
+            "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿"
         }
     },
     {
@@ -248,7 +248,7 @@
         "fields": {
             "name": "Croacia",
             "code": "CRO",
-            "flag": ""
+            "flag": "🇭🇷"
         }
     },
     {
@@ -257,7 +257,7 @@
         "fields": {
             "name": "Francia",
             "code": "FRA",
-            "flag": ""
+            "flag": "🇫🇷"
         }
     },
     {
@@ -266,7 +266,7 @@
         "fields": {
             "name": "Portugal",
             "code": "POR",
-            "flag": ""
+            "flag": "🇵🇹"
         }
     },
     {
@@ -275,7 +275,7 @@
         "fields": {
             "name": "Noruega",
             "code": "NOR",
-            "flag": ""
+            "flag": "🇳🇴"
         }
     },
     {
@@ -284,7 +284,7 @@
         "fields": {
             "name": "Países Bajos",
             "code": "NED",
-            "flag": ""
+            "flag": "🇳🇱"
         }
     },
     {
@@ -293,7 +293,7 @@
         "fields": {
             "name": "Alemania",
             "code": "GER",
-            "flag": ""
+            "flag": "🇩🇪"
         }
     },
     {
@@ -302,7 +302,7 @@
         "fields": {
             "name": "Bélgica",
             "code": "BEL",
-            "flag": ""
+            "flag": "🇧🇪"
         }
     },
     {
@@ -311,7 +311,7 @@
         "fields": {
             "name": "Austria",
             "code": "AUT",
-            "flag": ""
+            "flag": "🇦🇹"
         }
     },
     {
@@ -320,7 +320,7 @@
         "fields": {
             "name": "España",
             "code": "ESP",
-            "flag": ""
+            "flag": "🇪🇸"
         }
     },
     {
@@ -329,7 +329,7 @@
         "fields": {
             "name": "Suiza",
             "code": "SUI",
-            "flag": ""
+            "flag": "🇨🇭"
         }
     },
     {
@@ -338,7 +338,7 @@
         "fields": {
             "name": "Escocia",
             "code": "SCO",
-            "flag": ""
+            "flag": "🏴󠁧󠁢󠁳󠁣󠁴󠁿"
         }
     },
     {
@@ -347,7 +347,7 @@
         "fields": {
             "name": "Panamá",
             "code": "PAN",
-            "flag": ""
+            "flag": "🇵🇦"
         }
     },
     {
@@ -356,7 +356,7 @@
         "fields": {
             "name": "Curazao",
             "code": "CUW",
-            "flag": ""
+            "flag": "🇨🇼"
         }
     },
     {
@@ -365,70 +365,70 @@
         "fields": {
             "name": "Haití",
             "code": "HAI",
-            "flag": ""
+            "flag": "🇭🇹"
         }
     },
     {
         "model": "predictions.team",
         "pk": 42,
         "fields": {
-            "name": "Playoff UEFA A: Italia/Gales/Bosnia/Irlanda del Norte",
-            "code": "PLA",
-            "flag": ""
+            "name": "Bosnia y Herzegovina",
+            "code": "BIH",
+            "flag": "🇧🇦"
         }
     },
     {
         "model": "predictions.team",
         "pk": 43,
         "fields": {
-            "name": "Playoff UEFA B: Ucrania/Suecia/Polonia/Albania",
-            "code": "PLB",
-            "flag": ""
+            "name": "Suecia",
+            "code": "SWE",
+            "flag": "🇸🇪"
         }
     },
     {
         "model": "predictions.team",
         "pk": 44,
         "fields": {
-            "name": "Playoff UEFA C: Turquía/Rumania/Eslovaquia/Kosovo",
-            "code": "PLC",
-            "flag": ""
+            "name": "Turquía",
+            "code": "TUR",
+            "flag": "🇹🇷"
         }
     },
     {
         "model": "predictions.team",
         "pk": 45,
         "fields": {
-            "name": "Playoff UEFA D: Dinamarca/Macedonia/Chequia/R. Irlanda",
-            "code": "PLD",
-            "flag": ""
+            "name": "Chequia",
+            "code": "CZE",
+            "flag": "🇨🇿"
         }
     },
     {
         "model": "predictions.team",
         "pk": 46,
         "fields": {
-            "name": "Playoff Intercontinental 1: RD Congo/Jamaica/Nueva Caledonia",
-            "code": "IC1",
-            "flag": ""
+            "name": "RD Congo",
+            "code": "COD",
+            "flag": "🇨🇩"
         }
     },
     {
         "model": "predictions.team",
         "pk": 47,
         "fields": {
-            "name": "Playoff Intercontinental 2: Iraq/Bolivia/Surinam",
-            "code": "IC2",
-            "flag": ""
+            "name": "Irak",
+            "code": "IRQ",
+            "flag": "🇮🇶"
         }
     },
     {
         "model": "predictions.team",
         "pk": 48,
         "fields": {
-            "name": "Irán (participación pendiente)",
+            "name": "Irán",
             "code": "IRN",
-            "flag": ""
+            "flag": "🇮🇷"
         }
     }
 ]
