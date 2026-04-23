@@ -206,7 +206,6 @@ def mis_predicciones(request, tournament_id):
 
     def get_state(prediction):
         match = prediction.match
-        # El partido aún no tiene resultado
         if match.home_score is None or match.away_score is None:
             return "pending"
         elif prediction.points >= 1:
@@ -214,30 +213,33 @@ def mis_predicciones(request, tournament_id):
         else:
             return "wrong"
 
-    predictions_grouped = []
-    for fecha, grupo in groupby(
-        predictions, key=lambda p: p.match.match_datetime.date()
-    ):
-        predicciones = [
-            {
-                "prediction": p,
-                "state": get_state(p),
-            }
-            for p in grupo
-        ]
-        predictions_grouped.append(
-            {
-                "fecha": fecha,
-                "predicciones": predicciones,
-            }
-        )
+    # Agrupar por grupo de fase de grupos (A..L). Los partidos de eliminatoria
+    # van a una sección aparte al final.
+    groups_order = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
+    by_group = {}
+    knockout = []
+
+    for p in predictions:
+        item = {"prediction": p, "state": get_state(p)}
+        g = p.match.group
+        if g:
+            by_group.setdefault(g, []).append(item)
+        else:
+            knockout.append(item)
+
+    predictions_by_group = [
+        {"grupo": g, "predicciones": by_group[g]}
+        for g in groups_order
+        if g in by_group
+    ]
 
     return render(
         request,
         "predictions/mis_predicciones.html",
         {
             "tournament": tournament,
-            "predictions_grouped": predictions_grouped,
+            "predictions_by_group": predictions_by_group,
+            "knockout_predictions": knockout,
         },
     )
 

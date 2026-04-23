@@ -25,12 +25,12 @@
         color: var(--text-muted);
     }
 
-    /* ── Grupo de fecha ── */
-    .date-group {
+    /* ── Grupo ── */
+    .group-block {
         margin-bottom: 24px;
     }
 
-    .date-label {
+    .group-label {
         font-family: 'Barlow Condensed', sans-serif;
         font-size: 11px;
         font-weight: 600;
@@ -42,20 +42,20 @@
         margin-bottom: 10px;
     }
 
-    /* ── Grid responsive ── */
+    /* ── Grid: 3 columnas ── */
     .predictions-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 8px 12px;
     }
 
-    @media (min-width: 1100px) {
+    @media (max-width: 900px) {
         .predictions-grid {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
         }
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 560px) {
         .predictions-grid {
             grid-template-columns: 1fr;
         }
@@ -195,10 +195,11 @@
     <span class="page-subtitle">Tu historial de pronósticos</span>
 </div>
 
-{% if predictions_grouped %}
-    {% for group in predictions_grouped %}
-        <div class="date-group">
-            <div class="date-label">{{ group.fecha|date:"l d \d\e F" }}</div>
+{% if predictions_by_group or knockout_predictions %}
+
+    {% for group in predictions_by_group %}
+        <div class="group-block">
+            <div class="group-label">Grupo {{ group.grupo }}</div>
 
             <div class="predictions-grid">
                 {% for item in group.predicciones %}
@@ -239,6 +240,55 @@
             </div>
         </div>
     {% endfor %}
+
+    {% if knockout_predictions %}
+        <div class="group-block">
+            <div class="group-label">Fase eliminatoria</div>
+
+            <div class="predictions-grid">
+                {% for item in knockout_predictions %}
+                    <div class="prediction-card {{ item.state }}">
+
+                        <div class="teams">
+                            <span class="team-code">
+                                {% if item.prediction.match.home_team %}{{ item.prediction.match.home_team.code }}{% else %}{{ item.prediction.match.home_source }}{% endif %}
+                            </span>
+                            <span class="vs-sep">vs</span>
+                            <span class="team-code">
+                                {% if item.prediction.match.away_team %}{{ item.prediction.match.away_team.code }}{% else %}{{ item.prediction.match.away_source }}{% endif %}
+                            </span>
+                        </div>
+
+                        <div class="score-block">
+                            <span class="score-label">Pron.</span>
+                            <span class="score-value my-score">{{ item.prediction.home_score }}–{{ item.prediction.away_score }}</span>
+                        </div>
+
+                        <div class="score-block">
+                            <span class="score-label">Real</span>
+                            {% if item.prediction.match.home_score is not None %}
+                                <span class="score-value real-score">{{ item.prediction.match.home_score }}–{{ item.prediction.match.away_score }}</span>
+                            {% else %}
+                                <span class="score-value empty">—</span>
+                            {% endif %}
+                        </div>
+
+                        {% if item.prediction.match.home_score is None %}
+                            <div class="points-badge pending">—</div>
+                        {% elif item.prediction.points == 3 %}
+                            <div class="points-badge pts-3">3</div>
+                        {% elif item.prediction.points == 1 %}
+                            <div class="points-badge pts-1">1</div>
+                        {% else %}
+                            <div class="points-badge pts-0">0</div>
+                        {% endif %}
+
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
 {% else %}
     <div class="empty-state">
         Todavía no cargaste ninguna predicción.<br>
