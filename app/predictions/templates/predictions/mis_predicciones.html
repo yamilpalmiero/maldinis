@@ -27,7 +27,7 @@
 
     /* ── Grupo de fecha ── */
     .date-group {
-        margin-bottom: 32px;
+        margin-bottom: 24px;
     }
 
     .date-label {
@@ -37,22 +37,42 @@
         color: var(--gold);
         letter-spacing: 2px;
         text-transform: uppercase;
-        padding-bottom: 10px;
+        padding-bottom: 8px;
         border-bottom: 1px solid var(--border);
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
 
-    /* ── Tarjeta de predicción ── */
+    /* ── Grid responsive ── */
+    .predictions-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px 12px;
+    }
+
+    @media (min-width: 1100px) {
+        .predictions-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .predictions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* ── Tarjeta compacta ── */
     .prediction-card {
         background: var(--bg-card);
         border: 0.5px solid var(--border);
         border-radius: var(--radius);
-        padding: 14px 20px;
-        margin-bottom: 8px;
-        display: flex;
+        padding: 8px 12px;
+        display: grid;
+        grid-template-columns: 1fr auto auto auto;
         align-items: center;
-        gap: 16px;
+        gap: 10px;
         border-left: 3px solid transparent;
+        height: 44px;
     }
 
     .prediction-card.pending {
@@ -67,49 +87,41 @@
         border-left-color: #6a2a2a;
     }
 
-    /* ── Equipos ── */
+    /* ── Equipos (códigos cortos) ── */
     .teams {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .team-flag {
-        font-size: 20px;
-        line-height: 1;
-    }
-
-    .team-name {
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 600;
+        letter-spacing: 1px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .team-code {
+        color: var(--text-primary);
     }
 
     .vs-sep {
-        font-size: 12px;
+        font-size: 10px;
         color: var(--text-muted);
-        margin: 0 6px;
+        margin: 0 4px;
+        font-weight: 400;
+        letter-spacing: 0;
     }
 
-    /* ── Scores ── */
-    .scores {
-        display: flex;
-        align-items: center;
-        gap: 24px;
-    }
-
+    /* ── Bloques de score ── */
     .score-block {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 2px;
+        gap: 1px;
+        min-width: 44px;
     }
 
     .score-label {
-        font-size: 10px;
+        font-size: 8px;
         color: var(--text-muted);
         letter-spacing: 1px;
         text-transform: uppercase;
@@ -117,31 +129,34 @@
 
     .score-value {
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 20px;
+        font-size: 14px;
         font-weight: 600;
-        color: var(--text-secondary);
-        letter-spacing: 2px;
+        letter-spacing: 1px;
+        line-height: 1;
     }
 
     .score-value.my-score {
         color: var(--gold);
     }
 
-    .score-divider {
-        width: 1px;
-        height: 32px;
-        background: var(--border);
+    .score-value.real-score {
+        color: var(--text-secondary);
+    }
+
+    .score-value.empty {
+        color: var(--text-muted);
     }
 
     /* ── Badge de puntos ── */
     .points-badge {
-        min-width: 52px;
+        min-width: 38px;
         text-align: center;
-        padding: 6px 10px;
+        padding: 3px 6px;
         border-radius: var(--radius-sm);
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 15px;
+        font-size: 12px;
         font-weight: 600;
+        letter-spacing: 0.5px;
     }
 
     .points-badge.pending {
@@ -185,44 +200,43 @@
         <div class="date-group">
             <div class="date-label">{{ group.fecha|date:"l d \d\e F" }}</div>
 
-            {% for item in group.predicciones %}
-                <div class="prediction-card {{ item.state }}">
+            <div class="predictions-grid">
+                {% for item in group.predicciones %}
+                    <div class="prediction-card {{ item.state }}">
 
-                    <div class="teams">
-                        <span class="team-flag">{{ item.prediction.match.home_team.flag }}</span>
-                        <span class="team-name">{{ item.prediction.match.home_team }}</span>
-                        <span class="vs-sep">vs</span>
-                        <span class="team-name">{{ item.prediction.match.away_team }}</span>
-                        <span class="team-flag">{{ item.prediction.match.away_team.flag }}</span>
-                    </div>
-
-                    <div class="scores">
-                        <div class="score-block">
-                            <span class="score-label">Mi pronóstico</span>
-                            <span class="score-value my-score">{{ item.prediction.home_score }} — {{ item.prediction.away_score }}</span>
+                        <div class="teams">
+                            <span class="team-code">{{ item.prediction.match.home_team.code }}</span>
+                            <span class="vs-sep">vs</span>
+                            <span class="team-code">{{ item.prediction.match.away_team.code }}</span>
                         </div>
 
-                        {% if item.prediction.match.home_score is not None %}
-                            <div class="score-divider"></div>
-                            <div class="score-block">
-                                <span class="score-label">Resultado</span>
-                                <span class="score-value">{{ item.prediction.match.home_score }} — {{ item.prediction.match.away_score }}</span>
-                            </div>
+                        <div class="score-block">
+                            <span class="score-label">Pron.</span>
+                            <span class="score-value my-score">{{ item.prediction.home_score }}–{{ item.prediction.away_score }}</span>
+                        </div>
+
+                        <div class="score-block">
+                            <span class="score-label">Real</span>
+                            {% if item.prediction.match.home_score is not None %}
+                                <span class="score-value real-score">{{ item.prediction.match.home_score }}–{{ item.prediction.match.away_score }}</span>
+                            {% else %}
+                                <span class="score-value empty">—</span>
+                            {% endif %}
+                        </div>
+
+                        {% if item.prediction.match.home_score is None %}
+                            <div class="points-badge pending">—</div>
+                        {% elif item.prediction.points == 3 %}
+                            <div class="points-badge pts-3">3</div>
+                        {% elif item.prediction.points == 1 %}
+                            <div class="points-badge pts-1">1</div>
+                        {% else %}
+                            <div class="points-badge pts-0">0</div>
                         {% endif %}
+
                     </div>
-
-                    {% if item.prediction.points == None %}
-                        <div class="points-badge pending">—</div>
-                    {% elif item.prediction.points == 3 %}
-                        <div class="points-badge pts-3">3 pts</div>
-                    {% elif item.prediction.points == 1 %}
-                        <div class="points-badge pts-1">1 pt</div>
-                    {% else %}
-                        <div class="points-badge pts-0">0 pts</div>
-                    {% endif %}
-
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     {% endfor %}
 {% else %}

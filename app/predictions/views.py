@@ -23,8 +23,10 @@ def fixture(request, tournament_id):
         messages.error(request, "No eres miembro de este torneo.")
         return redirect("mis_torneos")
 
-    matches = Match.objects.select_related("home_team", "away_team").order_by(
-        "match_datetime"
+    matches = (
+        Match.objects.filter(stage=Match.Stage.GROUP)
+        .select_related("home_team", "away_team")
+        .order_by("match_datetime")
     )
 
     if request.method == "POST":
@@ -91,6 +93,93 @@ def fixture(request, tournament_id):
             "tournament": tournament,
             "match_list_grouped": match_list_grouped,
             "match_list_by_group": match_list_by_group,
+            "now": timezone.now(),
+        },
+    )
+
+
+@login_required
+def bracket(request, tournament_id):
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+
+    if not TournamentMember.objects.filter(
+        tournament=tournament, user=request.user
+    ).exists():
+        messages.error(request, "No eres miembro de este torneo.")
+        return redirect("mis_torneos")
+
+    knockout_stages = [
+        Match.Stage.ROUND_OF_32,
+        Match.Stage.ROUND_OF_16,
+        Match.Stage.QUARTER_FINAL,
+        Match.Stage.SEMI_FINAL,
+        Match.Stage.THIRD_PLACE,
+        Match.Stage.FINAL,
+    ]
+
+    matches = (
+        Match.objects.filter(stage__in=knockout_stages)
+        .select_related("home_team", "away_team")
+        .order_by("match_datetime")
+    )
+
+    if request.method == "POST":
+        for match in matches:
+            if match.match_datetime > timezone.now():
+                home_score = request.POST.get(f"home_{match.id}")
+                away_score = request.POST.get(f"away_{match.id}")
+                if home_score not in (None, "") and away_score not in (None, ""):
+                    Prediction.objects.update_or_create(
+                        user=request.user,
+                        match=match,
+                        tournament=tournament,
+                        defaults={
+                            "home_score": int(home_score),
+                            "away_score": int(away_score),
+                        },
+                    )
+        return redirect("bracket", tournament_id=tournament_id)
+
+    predictions = Prediction.objects.filter(user=request.user, tournament=tournament)
+    predictions_map = {p.match_id: p for p in predictions}
+
+    stage_labels = {
+        Match.Stage.ROUND_OF_32: "Dieciseisavos",
+        Match.Stage.ROUND_OF_16: "Octavos",
+        Match.Stage.QUARTER_FINAL: "Cuartos",
+        Match.Stage.SEMI_FINAL: "Semifinales",
+        Match.Stage.THIRD_PLACE: "Tercer puesto",
+        Match.Stage.FINAL: "Final",
+    }
+
+    matches_by_stage = {stage: [] for stage in knockout_stages}
+    for match in matches:
+        prediction = predictions_map.get(match.id)
+        matches_by_stage[match.stage].append(
+            {
+                "match": match,
+                "home_score": prediction.home_score if prediction else "",
+                "away_score": prediction.away_score if prediction else "",
+                "editable": match.match_datetime > timezone.now(),
+            }
+        )
+
+    bracket_stages = [
+        {
+            "stage": stage,
+            "label": stage_labels[stage],
+            "partidos": matches_by_stage[stage],
+        }
+        for stage in knockout_stages
+        if matches_by_stage[stage]
+    ]
+
+    return render(
+        request,
+        "predictions/bracket.html",
+        {
+            "tournament": tournament,
+            "bracket_stages": bracket_stages,
             "now": timezone.now(),
         },
     )

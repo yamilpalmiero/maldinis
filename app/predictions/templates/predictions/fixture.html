@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load flag_tags %}
 
 {% block title %}Fixture — Mundial 2026{% endblock %}
 
@@ -196,6 +197,17 @@
         display: flex;
         justify-content: flex-end;
     }
+
+    /* ── Banderas ── */
+    .flag-img {
+        width: 22px;
+        height: auto;
+        border-radius: 2px;
+        flex-shrink: 0;
+        display: inline-block;
+        vertical-align: middle;
+        box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+    }
 </style>
 {% endblock %}
 
@@ -222,7 +234,11 @@
             <div class="matches-grid">
                 {% for item in group.partidos %}
                 <div class="match-card {% if not item.editable %}locked{% endif %}">
-                    <span class="team-name">{{ item.match.home_team.name }} {{ item.match.home_team.flag }}</span>
+                    <span class="team-name">
+                        {{ item.match.home_team.name }}
+                        {% flag_url item.match.home_team.code as home_flag %}
+                        {% if home_flag %}<img class="flag-img" src="{{ home_flag }}" alt="{{ item.match.home_team.code }}">{% endif %}
+                    </span>
                     <div class="score-area">
                         {% if item.editable %}
                         <input class="score-input" type="number" name="home_{{ item.match.id }}"
@@ -234,7 +250,11 @@
                         <span class="score-locked">{{ item.home_score }}:{{ item.away_score }}</span>
                         {% endif %}
                     </div>
-                    <span class="team-name away">{{ item.match.away_team.flag }} {{ item.match.away_team.name }}</span>
+                    <span class="team-name away">
+                        {% flag_url item.match.away_team.code as away_flag %}
+                        {% if away_flag %}<img class="flag-img" src="{{ away_flag }}" alt="{{ item.match.away_team.code }}">{% endif %}
+                        {{ item.match.away_team.name }}
+                    </span>
                     <span class="match-time">{{ item.match.match_datetime|date:"H:i" }}</span>
                 </div>
                 {% endfor %}
@@ -251,7 +271,11 @@
             <div class="matches-grid">
                 {% for item in group.partidos %}
                 <div class="match-card {% if not item.editable %}locked{% endif %}">
-                    <span class="team-name">{{ item.match.home_team.name }} {{ item.match.home_team.flag }}</span>
+                    <span class="team-name">
+                        {{ item.match.home_team.name }}
+                        {% flag_url item.match.home_team.code as home_flag %}
+                        {% if home_flag %}<img class="flag-img" src="{{ home_flag }}" alt="{{ item.match.home_team.code }}">{% endif %}
+                    </span>
                     <div class="score-area">
                         {% if item.editable %}
                         <input class="score-input" type="number" name="home_{{ item.match.id }}"
@@ -263,7 +287,11 @@
                         <span class="score-locked">{{ item.home_score }}:{{ item.away_score }}</span>
                         {% endif %}
                     </div>
-                    <span class="team-name away">{{ item.match.away_team.flag }} {{ item.match.away_team.name }}</span>
+                    <span class="team-name away">
+                        {% flag_url item.match.away_team.code as away_flag %}
+                        {% if away_flag %}<img class="flag-img" src="{{ away_flag }}" alt="{{ item.match.away_team.code }}">{% endif %}
+                        {{ item.match.away_team.name }}
+                    </span>
                     <span class="match-time">{{ item.match.match_datetime|date:"H:i" }}</span>
                 </div>
                 {% endfor %}

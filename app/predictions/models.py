@@ -46,6 +46,11 @@ class Match(models.Model):
     match_datetime = models.DateTimeField()
     stage = models.CharField(max_length=10, choices=Stage.choices, default=Stage.GROUP)
     group = models.CharField(max_length=1, blank=True)
+    # Origen del slot en partidos de eliminatoria.
+    # Formatos: "1A" (ganador grupo A), "2B" (2º grupo B), "3ABCDF" (3º de alguno de esos grupos),
+    # "W73" (ganador M73), "L101" (perdedor M101). Vacío en fase de grupos.
+    home_source = models.CharField(max_length=50, blank=True)
+    away_source = models.CharField(max_length=50, blank=True)
     home_score = models.PositiveSmallIntegerField(null=True, blank=True)
     away_score = models.PositiveSmallIntegerField(null=True, blank=True)
     status = models.CharField(max_length=20, blank=True, help_text="TIMED, IN_PLAY, FINISHED, etc.")

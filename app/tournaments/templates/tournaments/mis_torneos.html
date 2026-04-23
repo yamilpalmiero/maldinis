@@ -244,9 +244,10 @@
         </div>
         <div class="torneo-actions">
             <a href="{% url 'fixture' item.membership.tournament.id %}">Fixture</a>
-            <a href="{% url 'ranking' item.membership.tournament.id %}">Ranking</a>
+            <a href="{% url 'bracket' item.membership.tournament.id %}">Bracket</a>
             <a href="{% url 'mis_predicciones' item.membership.tournament.id %}">Predicciones</a>
             <a href="{% url 'predicciones_especiales' item.membership.tournament.id %}">Especiales</a>
+            <a href="{% url 'ranking' item.membership.tournament.id %}">Ranking</a>
             {% if item.membership.role == 'ADMIN' %}
             <form method="post" action="{% url 'eliminar_torneo' item.membership.tournament.id %}" onsubmit="return confirm('¿Eliminar el torneo {{ item.membership.tournament.name }}? Esta acción no se puede deshacer.')">
                 {% csrf_token %}
