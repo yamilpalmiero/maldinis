@@ -125,7 +125,12 @@ def bracket(request, tournament_id):
 
     if request.method == "POST":
         for match in matches:
-            if match.match_datetime > timezone.now():
+            # Solo se acepta predicción si hay equipos asignados Y el partido aún no empezó
+            if (
+                match.home_team
+                and match.away_team
+                and match.match_datetime > timezone.now()
+            ):
                 home_score = request.POST.get(f"home_{match.id}")
                 away_score = request.POST.get(f"away_{match.id}")
                 if home_score not in (None, "") and away_score not in (None, ""):
@@ -147,31 +152,41 @@ def bracket(request, tournament_id):
         Match.Stage.ROUND_OF_32: "Dieciseisavos",
         Match.Stage.ROUND_OF_16: "Octavos",
         Match.Stage.QUARTER_FINAL: "Cuartos",
-        Match.Stage.SEMI_FINAL: "Semifinales",
-        Match.Stage.THIRD_PLACE: "Tercer puesto",
+        Match.Stage.SEMI_FINAL: "Semis",
+        Match.Stage.THIRD_PLACE: "3er puesto",
         Match.Stage.FINAL: "Final",
     }
 
     matches_by_stage = {stage: [] for stage in knockout_stages}
     for match in matches:
         prediction = predictions_map.get(match.id)
+        # Editable solo si hay equipos asignados y el partido aún no empezó
+        has_teams = bool(match.home_team and match.away_team)
+        editable = has_teams and match.match_datetime > timezone.now()
+
         matches_by_stage[match.stage].append(
             {
                 "match": match,
                 "home_score": prediction.home_score if prediction else "",
                 "away_score": prediction.away_score if prediction else "",
-                "editable": match.match_datetime > timezone.now(),
+                "editable": editable,
+                "has_teams": has_teams,
             }
         )
 
-    bracket_stages = [
+    # Estructura del bracket: 5 columnas visuales (3P y F comparten columna)
+    bracket_columns = [
+        {"label": stage_labels[Match.Stage.ROUND_OF_32], "partidos": matches_by_stage[Match.Stage.ROUND_OF_32]},
+        {"label": stage_labels[Match.Stage.ROUND_OF_16], "partidos": matches_by_stage[Match.Stage.ROUND_OF_16]},
+        {"label": stage_labels[Match.Stage.QUARTER_FINAL], "partidos": matches_by_stage[Match.Stage.QUARTER_FINAL]},
+        {"label": stage_labels[Match.Stage.SEMI_FINAL], "partidos": matches_by_stage[Match.Stage.SEMI_FINAL]},
         {
-            "stage": stage,
-            "label": stage_labels[stage],
-            "partidos": matches_by_stage[stage],
-        }
-        for stage in knockout_stages
-        if matches_by_stage[stage]
+            "label": "Final / 3er puesto",
+            "partidos": (
+                matches_by_stage[Match.Stage.FINAL]
+                + matches_by_stage[Match.Stage.THIRD_PLACE]
+            ),
+        },
     ]
 
     return render(
@@ -179,7 +194,7 @@ def bracket(request, tournament_id):
         "predictions/bracket.html",
         {
             "tournament": tournament,
-            "bracket_stages": bracket_stages,
+            "bracket_columns": bracket_columns,
             "now": timezone.now(),
         },
     )
