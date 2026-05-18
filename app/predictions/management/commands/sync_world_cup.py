@@ -6,7 +6,7 @@ Uso:
 from django.core.management.base import BaseCommand
 from django.utils.dateparse import parse_datetime
 
-from predictions.models import Match, Team, Prediction
+from predictions.models import Match, Team
 from predictions.services.football_data import (
     get_world_cup_matches,
     api_tla_to_team_code,

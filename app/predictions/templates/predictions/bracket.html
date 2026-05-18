@@ -5,7 +5,6 @@
 
 {% block extra_css %}
 <style>
-    /* Anular el max-width del main para aprovechar todo el ancho */
     .main-content {
         max-width: 100% !important;
     }
@@ -14,11 +13,6 @@
         max-width: 1000px;
         margin: 0 auto 28px;
         padding: 0 24px;
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 16px;
     }
 
     .bracket-title {
@@ -35,11 +29,6 @@
         color: var(--text-muted);
     }
 
-    .bracket-actions {
-        margin-left: auto;
-    }
-
-    /* ── Wrapper con scroll horizontal ── */
     .bracket-scroll {
         overflow-x: auto;
         padding: 8px 24px 24px;
@@ -47,41 +36,18 @@
     }
 
     .bracket-stage {
-        position: relative;
         display: flex;
         gap: 32px;
         min-width: max-content;
     }
 
-    /* SVG de líneas conectoras (capa por debajo) */
-    .bracket-svg {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    .bracket-line {
-        fill: none;
-        stroke: var(--border-gold);
-        stroke-width: 1;
-    }
-
-    /* ── Columna ── */
     .bracket-column {
         display: flex;
         flex-direction: column;
-        justify-content: space-around;
         width: 200px;
         flex-shrink: 0;
-        position: relative;
-        z-index: 1;
     }
 
-    /* Última columna (3er puesto + Final): centrar verticalmente los 2 partidos */
     .bracket-column:last-child .column-matches {
         justify-content: center;
         flex: 1;
@@ -109,7 +75,6 @@
         gap: 8px;
     }
 
-    /* ── Tarjeta de partido del bracket ── */
     .bracket-card {
         background: var(--bg-card);
         border: 0.5px solid var(--border);
@@ -118,16 +83,6 @@
         display: flex;
         flex-direction: column;
         gap: 4px;
-        transition: background 0.15s, border-color 0.15s;
-        position: relative;
-    }
-
-    .bracket-card:hover {
-        background: var(--bg-card-hover);
-    }
-
-    .bracket-card.locked {
-        opacity: 0.65;
     }
 
     .bracket-card.no-teams {
@@ -177,55 +132,12 @@
         text-overflow: ellipsis;
     }
 
-    .score-input-mini {
-        background: var(--bg-base);
-        border: 1px solid var(--border-gold);
-        border-radius: 3px;
-        width: 28px;
-        height: 22px;
-        text-align: center;
-        color: var(--gold);
-        font-family: 'Barlow Condensed', sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        flex-shrink: 0;
-        appearance: textfield;
-        -moz-appearance: textfield;
-    }
-
-    .score-input-mini::-webkit-outer-spin-button,
-    .score-input-mini::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-    }
-
-    .score-input-mini:focus {
-        outline: none;
-        border-color: var(--gold);
-    }
-
-    .score-locked-mini {
-        font-family: 'Barlow Condensed', sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-muted);
-        min-width: 16px;
-        text-align: center;
-    }
-
     .card-meta {
         font-size: 9px;
         color: var(--text-muted);
         letter-spacing: 0.5px;
         text-align: center;
         margin-top: 2px;
-    }
-
-    .bracket-footer {
-        max-width: 1000px;
-        margin: 32px auto 0;
-        padding: 0 24px;
-        display: flex;
-        justify-content: flex-end;
     }
 
     .empty-state {
@@ -235,21 +147,10 @@
         font-size: 14px;
     }
 
-    /* ── Hint de scroll en móvil ── */
     @media (max-width: 900px) {
-        .scroll-hint {
-            display: block;
-            text-align: center;
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            letter-spacing: 1px;
-        }
+        .scroll-hint { display: block; text-align: center; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 1px; }
     }
-
-    .scroll-hint {
-        display: none;
-    }
+    .scroll-hint { display: none; }
 </style>
 {% endblock %}
 
@@ -257,153 +158,46 @@
 <div class="bracket-header">
     <div>
         <h1 class="bracket-title">Bracket</h1>
-        <span class="bracket-subtitle">Predicciones de la fase eliminatoria</span>
+        <span class="bracket-subtitle">Fase eliminatoria — próximamente podrás hacer tus predicciones</span>
     </div>
 </div>
 
 {% if bracket_columns.0.partidos %}
-<form method="post">
-    {% csrf_token %}
-
-    <div class="scroll-hint">← Desliza para ver todas las rondas →</div>
-
-    <div class="bracket-scroll">
-        <div class="bracket-stage" id="bracket-stage">
-            <svg class="bracket-svg" id="bracket-svg" xmlns="http://www.w3.org/2000/svg"></svg>
-
-            {% for column in bracket_columns %}
-            <div class="bracket-column" data-stage-index="{{ forloop.counter0 }}">
-                <div class="column-label">{{ column.label }}</div>
-                <div class="column-matches">
-                    {% for item in column.partidos %}
-                    <div
-                        class="bracket-card {% if not item.has_teams %}no-teams{% elif not item.editable %}locked{% endif %}"
-                        data-match-id="{{ item.match.id }}"
-                    >
-                        {# ── Equipo local ── #}
-                        <div class="bracket-row">
-                            {% if item.match.home_team %}
-                                {% flag_url item.match.home_team.code as home_flag %}
-                                {% if home_flag %}<img class="team-flag-mini" src="{{ home_flag }}" alt="{{ item.match.home_team.code }}">{% endif %}
-                                <span class="team-label">{{ item.match.home_team.code }}</span>
-                            {% else %}
-                                <span class="team-source">{{ item.match.home_source }}</span>
-                            {% endif %}
-
-                            {% if item.editable %}
-                                <input class="score-input-mini" type="number" name="home_{{ item.match.id }}"
-                                    value="{{ item.home_score }}" min="0" max="20">
-                            {% else %}
-                                <span class="score-locked-mini">{{ item.home_score|default:"—" }}</span>
-                            {% endif %}
-                        </div>
-
-                        {# ── Equipo visitante ── #}
-                        <div class="bracket-row">
-                            {% if item.match.away_team %}
-                                {% flag_url item.match.away_team.code as away_flag %}
-                                {% if away_flag %}<img class="team-flag-mini" src="{{ away_flag }}" alt="{{ item.match.away_team.code }}">{% endif %}
-                                <span class="team-label">{{ item.match.away_team.code }}</span>
-                            {% else %}
-                                <span class="team-source">{{ item.match.away_source }}</span>
-                            {% endif %}
-
-                            {% if item.editable %}
-                                <input class="score-input-mini" type="number" name="away_{{ item.match.id }}"
-                                    value="{{ item.away_score }}" min="0" max="20">
-                            {% else %}
-                                <span class="score-locked-mini">{{ item.away_score|default:"—" }}</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="card-meta">{{ item.match.match_datetime|date:"d/m H:i" }}</div>
+<div class="scroll-hint">← Desliza para ver todas las rondas →</div>
+<div class="bracket-scroll">
+    <div class="bracket-stage">
+        {% for column in bracket_columns %}
+        <div class="bracket-column">
+            <div class="column-label">{{ column.label }}</div>
+            <div class="column-matches">
+                {% for item in column.partidos %}
+                <div class="bracket-card {% if not item.match.home_team or not item.match.away_team %}no-teams{% endif %}">
+                    <div class="bracket-row">
+                        {% if item.match.home_team %}
+                            {% flag_url item.match.home_team.code as home_flag %}
+                            {% if home_flag %}<img class="team-flag-mini" src="{{ home_flag }}" alt="{{ item.match.home_team.code }}">{% endif %}
+                            <span class="team-label">{{ item.match.home_team.code }}</span>
+                        {% else %}
+                            <span class="team-source">{{ item.match.home_source }}</span>
+                        {% endif %}
                     </div>
-                    {% endfor %}
+                    <div class="bracket-row">
+                        {% if item.match.away_team %}
+                            {% flag_url item.match.away_team.code as away_flag %}
+                            {% if away_flag %}<img class="team-flag-mini" src="{{ away_flag }}" alt="{{ item.match.away_team.code }}">{% endif %}
+                            <span class="team-label">{{ item.match.away_team.code }}</span>
+                        {% else %}
+                            <span class="team-source">{{ item.match.away_source }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-meta">{{ item.match.match_datetime|date:"d/m H:i" }}</div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
+        {% endfor %}
     </div>
-
-    <div class="bracket-footer">
-        <button type="submit" class="btn-primary">Guardar predicciones</button>
-    </div>
-</form>
-
-<script>
-    // Dibuja líneas SVG conectoras entre columnas del bracket.
-    // Cada partido de la columna N se conecta con sus dos "padres" de la columna N-1.
-    // Excepción: la última columna (Final + 3er puesto) — solo la Final tiene padres
-    // (las dos semis), el 3er puesto se conecta también a las semis (perdedores).
-    (function () {
-        const stage = document.getElementById('bracket-stage');
-        const svg = document.getElementById('bracket-svg');
-
-        function draw() {
-            // Set dimensions del SVG según el contenedor
-            const rect = stage.getBoundingClientRect();
-            svg.setAttribute('width', rect.width);
-            svg.setAttribute('height', rect.height);
-            svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
-            svg.innerHTML = '';
-
-            const columns = Array.from(stage.querySelectorAll('.bracket-column'));
-            if (columns.length < 2) return;
-
-            // Para cada columna a partir de la 2ª, conectar cada tarjeta con sus 2 padres
-            for (let c = 1; c < columns.length; c++) {
-                const childCards = Array.from(columns[c].querySelectorAll('.bracket-card'));
-                const parentCards = Array.from(columns[c - 1].querySelectorAll('.bracket-card'));
-
-                childCards.forEach((child, idx) => {
-                    let parents = [];
-
-                    // Última columna: contiene Final (idx=0) y 3er puesto (idx=1)
-                    // Ambos se conectan a las dos semis (los mismos padres)
-                    if (c === columns.length - 1) {
-                        parents = [parentCards[0], parentCards[1]];
-                    } else {
-                        // Por defecto: cada hijo se conecta a 2 padres consecutivos
-                        parents = [parentCards[idx * 2], parentCards[idx * 2 + 1]];
-                    }
-
-                    parents.forEach(parent => {
-                        if (!parent || !child) return;
-                        drawConnector(parent, child);
-                    });
-                });
-            }
-        }
-
-        function drawConnector(parent, child) {
-            const stageRect = stage.getBoundingClientRect();
-            const parentRect = parent.getBoundingClientRect();
-            const childRect = child.getBoundingClientRect();
-
-            // Coordenadas relativas al SVG
-            const x1 = parentRect.right - stageRect.left;
-            const y1 = parentRect.top + parentRect.height / 2 - stageRect.top;
-            const x2 = childRect.left - stageRect.left;
-            const y2 = childRect.top + childRect.height / 2 - stageRect.top;
-
-            // Línea en forma de "S" suave: horizontal → vertical → horizontal
-            const midX = (x1 + x2) / 2;
-            const path = `M ${x1} ${y1} H ${midX} V ${y2} H ${x2}`;
-
-            const el = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            el.setAttribute('d', path);
-            el.setAttribute('class', 'bracket-line');
-            svg.appendChild(el);
-        }
-
-        // Redibujar al cargar y al redimensionar
-        window.addEventListener('load', draw);
-        window.addEventListener('resize', draw);
-        // Redibuja también después de un pequeño delay por si las fuentes cargan tarde
-        setTimeout(draw, 100);
-        setTimeout(draw, 500);
-    })();
-</script>
+</div>
 {% else %}
 <div class="empty-state">
     Los partidos de la fase eliminatoria aún no están cargados.

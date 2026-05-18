@@ -25,7 +25,6 @@
         color: var(--text-muted);
     }
 
-    /* ── Tabla de ranking ── */
     .ranking-table {
         width: 100%;
         border-collapse: collapse;
@@ -46,26 +45,17 @@
         text-align: left;
     }
 
-    .ranking-table th.right {
-        text-align: right;
-    }
+    .ranking-table th.right { text-align: right; }
 
-    /* ── Filas ── */
     .ranking-row {
         border-bottom: 0.5px solid var(--border);
         transition: background 0.15s;
     }
 
-    .ranking-row:hover {
-        background: var(--bg-card-hover);
-    }
+    .ranking-row:hover { background: var(--bg-card-hover); }
 
-    .ranking-row td {
-        padding: 14px 16px;
-        vertical-align: middle;
-    }
+    .ranking-row td { padding: 14px 16px; vertical-align: middle; }
 
-    /* ── Posición ── */
     .rank-pos {
         font-family: 'Barlow Condensed', sans-serif;
         font-size: 15px;
@@ -74,19 +64,6 @@
         width: 40px;
     }
 
-    .rank-pos.gold {
-        color: #c9a227;
-    }
-
-    .rank-pos.silver {
-        color: #aaaaaa;
-    }
-
-    .rank-pos.bronze {
-        color: #cd7f32;
-    }
-
-    /* ── Avatar ── */
     .rank-avatar {
         width: 36px;
         height: 36px;
@@ -103,166 +80,21 @@
         text-transform: uppercase;
     }
 
-    .rank-avatar.gold {
-        border-color: var(--gold);
-        color: var(--gold);
-    }
+    .avatar-cell { width: 52px; }
 
-    .rank-avatar.silver {
-        border-color: #aaaaaa;
-        color: #aaaaaa;
-    }
+    .rank-name { font-size: 15px; font-weight: 500; }
 
-    .rank-avatar.bronze {
-        border-color: #cd7f32;
-        color: #cd7f32;
-    }
-
-    .avatar-cell {
-        width: 52px;
-    }
-
-    /* ── Nombre ── */
-    .rank-name {
-        font-size: 15px;
-        font-weight: 500;
-    }
-
-    /* ── Exactos ── */
-    .rank-exact {
-        font-size: 13px;
-        color: var(--text-muted);
-        text-align: center;
-        white-space: nowrap;
-    }
-
-    .exact-badge {
-        display: inline-block;
-        background: var(--gold-subtle);
-        color: var(--gold);
-        border-radius: 6px;
-        padding: 2px 8px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    /* ── Barra de progreso ── */
-    .bar-cell {
-        width: 30%;
-    }
-
-    .rank-bar {
-        height: 3px;
-        border-radius: 2px;
-        background: var(--gold-dim);
-        transition: width 0.4s ease;
-    }
-
-    .rank-bar.gold {
-        background: var(--gold);
-    }
-
-    .rank-bar.silver {
-        background: #aaaaaa60;
-    }
-
-    .rank-bar.bronze {
-        background: #cd7f3260;
-    }
-
-    /* ── Puntos ── */
     .rank-pts {
         font-family: 'Barlow Condensed', sans-serif;
         font-size: 17px;
         font-weight: 600;
-        color: var(--text-secondary);
+        color: var(--text-muted);
         text-align: right;
         white-space: nowrap;
     }
 
-    .rank-pts.gold {
-        color: var(--gold);
-    }
-
-    .rank-pts.silver {
-        color: #aaaaaa;
-    }
-
-    .rank-pts.bronze {
-        color: #cd7f32;
-    }
-
-    /* ── Fila del usuario actual ── */
-    .ranking-row.is-me {
-        background: var(--gold-subtle);
-    }
-
-    .ranking-row.is-me:hover {
-        background: var(--gold-subtle);
-    }
-
-    /* ── Sección de premios ── */
-    .awards-section {
-        margin-top: 40px;
-        border-top: 1px solid var(--border);
-        padding-top: 28px;
-    }
-
-    .awards-title {
-        font-family: 'Barlow Condensed', sans-serif;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--gold);
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 16px;
-    }
-
-    .awards-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .award-row {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 14px 18px;
-    }
-
-    .award-icon {
-        font-size: 1.5rem;
-        flex-shrink: 0;
-    }
-
-    .award-info {
-        flex: 1;
-    }
-
-    .award-label {
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 2px;
-    }
-
-    .award-winner {
-        font-size: 15px;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .award-detail {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-top: 2px;
-    }
+    .ranking-row.is-me { background: var(--gold-subtle); }
+    .ranking-row.is-me:hover { background: var(--gold-subtle); }
 
     /* ── Predicciones especiales ── */
     .special-section {
@@ -305,9 +137,7 @@
         color: var(--text-secondary);
     }
 
-    .special-table tr:last-child td {
-        border-bottom: none;
-    }
+    .special-table tr:last-child td { border-bottom: none; }
 
     .special-empty {
         font-size: 13px;
@@ -315,7 +145,6 @@
         font-style: italic;
     }
 
-    /* ── Estado vacío ── */
     .empty-state {
         text-align: center;
         padding: 60px 0;
@@ -332,24 +161,21 @@
 </div>
 
 {% if ranking_list %}
-{% with max_pts=ranking_list.0.points %}
 <table class="ranking-table">
     <thead>
         <tr>
             <th>#</th>
             <th class="avatar-cell"></th>
             <th>Jugador</th>
-            <th class="right">Exactos</th>
-            <th class="bar-cell"></th>
             <th class="right">Puntos</th>
         </tr>
     </thead>
     <tbody>
         {% for item in ranking_list %}
         <tr class="ranking-row {% if item.user == request.user %}is-me{% endif %}">
-            <td class="rank-pos {{ item.medal }}">{{ item.position }}</td>
+            <td class="rank-pos">{{ item.position }}</td>
             <td class="avatar-cell">
-                <div class="rank-avatar {{ item.medal }}">{{ item.initials }}</div>
+                <div class="rank-avatar">{{ item.initials }}</div>
             </td>
             <td class="rank-name">
                 {{ item.user.username }}
@@ -357,65 +183,11 @@
                 <span style="font-size:11px; color: var(--gold); margin-left: 6px;">tú</span>
                 {% endif %}
             </td>
-            <td class="rank-exact">
-                {% if item.exact_results > 0 %}
-                <span class="exact-badge">{{ item.exact_results }} ✓</span>
-                {% else %}
-                <span style="color: var(--text-muted);">—</span>
-                {% endif %}
-            </td>
-            <td class="bar-cell">
-                {% if max_pts > 0 %}
-                <div class="rank-bar {{ item.medal }}" data-pts="{{ item.points }}" data-max="{{ max_pts }}"></div>
-                {% else %}
-                <div class="rank-bar"></div>
-                {% endif %}
-            </td>
-            <td class="rank-pts {{ item.medal }}">{{ item.points }} pts</td>
+            <td class="rank-pts">{{ item.points }} pts</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-{% endwith %}
-
-<!-- Premios estadísticos -->
-{% if most_exact_users %}
-<div class="awards-section">
-    <div class="awards-title">Premios</div>
-    <div class="awards-grid">
-
-        <div class="award-row">
-            <div class="award-icon">🥇</div>
-            <div class="award-info">
-                <div class="award-label">Mejor predictor</div>
-                <div class="award-winner">{{ ranking_list.0.user.username }}</div>
-                <div class="award-detail">{{ ranking_list.0.points }} puntos totales</div>
-            </div>
-        </div>
-
-        <div class="award-row">
-            <div class="award-icon">🎯</div>
-            <div class="award-info">
-                <div class="award-label">Más exacto</div>
-                <div class="award-winner">
-                    {% for username in most_exact_users %}
-                    {{ username }}{% if not forloop.last %}, {% endif %}
-                    {% endfor %}
-                </div>
-                <div class="award-detail">
-                    {% for item in ranking_list %}
-                    {% if item.user.username == most_exact_users.0 %}
-                    {{ item.exact_results }}
-                    {% if item.exact_results == 1 %}resultado exacto{% else %}resultados exactos{% endif %}
-                    {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-    </div>
-</div>
-{% endif %}
 
 <!-- Predicciones especiales del grupo -->
 <div class="special-section">
@@ -451,16 +223,7 @@
 
 {% else %}
 <div class="empty-state">
-    Todavía no hay puntos registrados.
+    Todavía no hay miembros en este torneo.
 </div>
 {% endif %}
-
-<script>
-    document.querySelectorAll('.rank-bar[data-pts]').forEach(function (bar) {
-        var pts = parseFloat(bar.dataset.pts);
-        var max = parseFloat(bar.dataset.max);
-        bar.style.width = (pts / max * 100) + '%';
-    });
-</script>
-
 {% endblock %}

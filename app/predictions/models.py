@@ -1,14 +1,9 @@
-# 1. Libreria estandar de Python
-import os
-
-# 2. Librerias de terceros
+# 1. Librerías de terceros
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.utils import timezone
+from django.core.exceptions import ValidationError
 
-# 3. Imports propios del proyecto
+# 2. Imports propios del proyecto
 from tournaments.models import Tournament
 
 
@@ -64,54 +59,84 @@ class Match(models.Model):
         ordering = ["match_datetime"]
 
 
-class Prediction(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="predictions")
-    match = models.ForeignKey(
-        Match, on_delete=models.CASCADE, related_name="predictions"
-    )
-    tournament = models.ForeignKey(
-        Tournament, on_delete=models.CASCADE, related_name="predictions"
-    )
-    home_score = models.PositiveSmallIntegerField()
-    away_score = models.PositiveSmallIntegerField()
-    points = models.PositiveSmallIntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+GROUP_CHOICES = [(g, g) for g in "ABCDEFGHIJKL"]
 
-    def __str__(self):
-        return (
-            f"{self.user.username}: {self.match} - {self.home_score}/{self.away_score}"
-        )
 
-    def calculate_points(self):
-        """Calcula los puntos de esta predicción comparando con el resultado real del partido."""
-        match = self.match
-        if match.home_score is None or match.away_score is None:
-            return 0
-
-        # Resultado exacto
-        if self.home_score == match.home_score and self.away_score == match.away_score:
-            return 3
-
-        # Acertar ganador (o empate)
-        pred_winner = self._winner(self.home_score, self.away_score)
-        real_winner = self._winner(match.home_score, match.away_score)
-        if pred_winner == real_winner:
-            return 1
-
-        return 0
-
-    @staticmethod
-    def _winner(home, away):
-        if home > away:
-            return "H"
-        if away > home:
-            return "A"
-        return "D"
+class GroupPrediction(models.Model):
+    user        = models.ForeignKey(User, on_delete=models.CASCADE, related_name="group_predictions")
+    tournament  = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="group_predictions")
+    group       = models.CharField(max_length=1, choices=GROUP_CHOICES)
+    first_team  = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="predicted_first",  null=True, blank=True)
+    second_team = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="predicted_second", null=True, blank=True)
+    third_team  = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="predicted_third",  null=True, blank=True)
 
     class Meta:
-        unique_together = ["user", "match", "tournament"]
-        ordering = ["match__match_datetime"]
+        unique_together = ["user", "tournament", "group"]
+
+    def __str__(self):
+        return f"{self.user.username} — Grupo {self.group} ({self.tournament.name})"
+
+    def clean(self):
+        from django.db.models import Q
+        teams = [t for t in [self.first_team, self.second_team, self.third_team] if t is not None]
+        if len(teams) != len({t.pk for t in teams}):
+            raise ValidationError("Los 3 equipos deben ser distintos.")
+        valid_pks = set(
+            Team.objects.filter(
+                Q(home_matches__stage=Match.Stage.GROUP, home_matches__group=self.group) |
+                Q(away_matches__stage=Match.Stage.GROUP, away_matches__group=self.group)
+            ).values_list("pk", flat=True)
+        )
+        for team in teams:
+            if team.pk not in valid_pks:
+                raise ValidationError(f"{team} no pertenece al grupo {self.group}.")
+
+
+class ThirdPlaceRanking(models.Model):
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name="third_place_rankings")
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="third_place_rankings")
+
+    class Meta:
+        unique_together = ["user", "tournament"]
+
+    def __str__(self):
+        return f"{self.user.username} — Ranking terceros ({self.tournament.name})"
+
+
+class ThirdPlaceRankingEntry(models.Model):
+    ranking  = models.ForeignKey(ThirdPlaceRanking, on_delete=models.CASCADE, related_name="entries")
+    team     = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="third_place_entries")
+    position = models.PositiveSmallIntegerField()  # 1–8
+
+    class Meta:
+        unique_together = [
+            ["ranking", "team"],
+            ["ranking", "position"],
+        ]
+
+    def __str__(self):
+        return f"{self.ranking} — #{self.position} {self.team}"
+
+    def clean(self):
+        if not (1 <= self.position <= 8):
+            raise ValidationError("La posición debe estar entre 1 y 8.")
+
+
+class BracketPrediction(models.Model):
+    user             = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bracket_predictions")
+    tournament       = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="bracket_predictions")
+    match            = models.ForeignKey(Match, on_delete=models.CASCADE, related_name="bracket_predictions")
+    predicted_winner = models.ForeignKey(Team, on_delete=models.PROTECT, related_name="bracket_wins")
+
+    class Meta:
+        unique_together = ["user", "tournament", "match"]
+
+    def __str__(self):
+        return f"{self.user.username}: {self.match} → {self.predicted_winner} ({self.tournament.name})"
+
+    def clean(self):
+        if self.match.stage == Match.Stage.GROUP:
+            raise ValidationError("Solo se predicen ganadores en partidos de eliminatoria.")
 
 
 class SpecialPrediction(models.Model):
@@ -133,14 +158,3 @@ class SpecialPrediction(models.Model):
 
     class Meta:
         unique_together = ["user", "tournament"]
-
-
-@receiver(post_save, sender=Match)
-def recalculate_predictions(sender, instance, **kwargs):
-    """Cuando se guarda un Match (p. ej. al meter su resultado), recalcula los points de sus predictions."""
-    if instance.home_score is None or instance.away_score is None:
-        return
-    for prediction in instance.predictions.all():
-        new_points = prediction.calculate_points()
-        if prediction.points != new_points:
-            Prediction.objects.filter(pk=prediction.pk).update(points=new_points)
