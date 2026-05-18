@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.conf import settings
 
 # 3. Imports propios del proyecto
-from .models import Match, Prediction, SpecialPrediction
+from .models import Match, SpecialPrediction
 from tournaments.models import Tournament, TournamentMember
 
 
@@ -29,58 +29,20 @@ def fixture(request, tournament_id):
         .order_by("match_datetime")
     )
 
-    if request.method == "POST":
-        for match in matches:
-            if match.match_datetime > timezone.now():
-                home_score = request.POST.get(f"home_{match.id}")
-                away_score = request.POST.get(f"away_{match.id}")
-                if home_score not in (None, "") and away_score not in (None, ""):
-                    Prediction.objects.update_or_create(
-                        user=request.user,
-                        match=match,
-                        tournament=tournament,
-                        defaults={
-                            "home_score": int(home_score),
-                            "away_score": int(away_score),
-                        },
-                    )
-        return redirect("fixture", tournament_id=tournament_id)
-
-    predictions = Prediction.objects.filter(user=request.user, tournament=tournament)
-    predictions_map = {p.match_id: p for p in predictions}
-
-    match_list = []
-    for match in matches:
-        prediction = predictions_map.get(match.id)
-        match_list.append(
-            {
-                "match": match,
-                "home_score": prediction.home_score if prediction else "",
-                "away_score": prediction.away_score if prediction else "",
-                "editable": match.match_datetime > timezone.now(),
-            }
-        )
+    match_list = [{"match": m} for m in matches]
 
     match_list_grouped = []
     for fecha, grupo in groupby(
         match_list, key=lambda x: x["match"].match_datetime.date()
     ):
-        match_list_grouped.append(
-            {
-                "fecha": fecha,
-                "partidos": list(grupo),
-            }
-        )
+        match_list_grouped.append({"fecha": fecha, "partidos": list(grupo)})
 
-    # Vista por grupo — solo partidos de fase de grupos con campo group definido
     groups_order = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
     by_group = {}
     for item in match_list:
         g = item["match"].group
         if g:
-            if g not in by_group:
-                by_group[g] = []
-            by_group[g].append(item)
+            by_group.setdefault(g, []).append(item)
 
     match_list_by_group = [
         {"grupo": g, "partidos": by_group[g]} for g in groups_order if g in by_group
@@ -93,7 +55,6 @@ def fixture(request, tournament_id):
             "tournament": tournament,
             "match_list_grouped": match_list_grouped,
             "match_list_by_group": match_list_by_group,
-            "now": timezone.now(),
         },
     )
 
@@ -123,31 +84,6 @@ def bracket(request, tournament_id):
         .order_by("match_datetime")
     )
 
-    if request.method == "POST":
-        for match in matches:
-            # Solo se acepta predicción si hay equipos asignados Y el partido aún no empezó
-            if (
-                match.home_team
-                and match.away_team
-                and match.match_datetime > timezone.now()
-            ):
-                home_score = request.POST.get(f"home_{match.id}")
-                away_score = request.POST.get(f"away_{match.id}")
-                if home_score not in (None, "") and away_score not in (None, ""):
-                    Prediction.objects.update_or_create(
-                        user=request.user,
-                        match=match,
-                        tournament=tournament,
-                        defaults={
-                            "home_score": int(home_score),
-                            "away_score": int(away_score),
-                        },
-                    )
-        return redirect("bracket", tournament_id=tournament_id)
-
-    predictions = Prediction.objects.filter(user=request.user, tournament=tournament)
-    predictions_map = {p.match_id: p for p in predictions}
-
     stage_labels = {
         Match.Stage.ROUND_OF_32: "Dieciseisavos",
         Match.Stage.ROUND_OF_16: "Octavos",
@@ -159,27 +95,13 @@ def bracket(request, tournament_id):
 
     matches_by_stage = {stage: [] for stage in knockout_stages}
     for match in matches:
-        prediction = predictions_map.get(match.id)
-        # Editable solo si hay equipos asignados y el partido aún no empezó
-        has_teams = bool(match.home_team and match.away_team)
-        editable = has_teams and match.match_datetime > timezone.now()
+        matches_by_stage[match.stage].append({"match": match})
 
-        matches_by_stage[match.stage].append(
-            {
-                "match": match,
-                "home_score": prediction.home_score if prediction else "",
-                "away_score": prediction.away_score if prediction else "",
-                "editable": editable,
-                "has_teams": has_teams,
-            }
-        )
-
-    # Estructura del bracket: 5 columnas visuales (3P y F comparten columna)
     bracket_columns = [
-        {"label": stage_labels[Match.Stage.ROUND_OF_32], "partidos": matches_by_stage[Match.Stage.ROUND_OF_32]},
-        {"label": stage_labels[Match.Stage.ROUND_OF_16], "partidos": matches_by_stage[Match.Stage.ROUND_OF_16]},
+        {"label": stage_labels[Match.Stage.ROUND_OF_32],   "partidos": matches_by_stage[Match.Stage.ROUND_OF_32]},
+        {"label": stage_labels[Match.Stage.ROUND_OF_16],   "partidos": matches_by_stage[Match.Stage.ROUND_OF_16]},
         {"label": stage_labels[Match.Stage.QUARTER_FINAL], "partidos": matches_by_stage[Match.Stage.QUARTER_FINAL]},
-        {"label": stage_labels[Match.Stage.SEMI_FINAL], "partidos": matches_by_stage[Match.Stage.SEMI_FINAL]},
+        {"label": stage_labels[Match.Stage.SEMI_FINAL],    "partidos": matches_by_stage[Match.Stage.SEMI_FINAL]},
         {
             "label": "Final / 3er puesto",
             "partidos": (
@@ -195,7 +117,6 @@ def bracket(request, tournament_id):
         {
             "tournament": tournament,
             "bracket_columns": bracket_columns,
-            "now": timezone.now(),
         },
     )
 
@@ -210,52 +131,10 @@ def mis_predicciones(request, tournament_id):
         messages.error(request, "No eres miembro de este torneo.")
         return redirect("mis_torneos")
 
-    predictions = (
-        Prediction.objects.filter(
-            user=request.user,
-            tournament=tournament,
-        )
-        .select_related("match", "match__home_team", "match__away_team")
-        .order_by("match__match_datetime")
-    )
-
-    def get_state(prediction):
-        match = prediction.match
-        if match.home_score is None or match.away_score is None:
-            return "pending"
-        elif prediction.points >= 1:
-            return "correct"
-        else:
-            return "wrong"
-
-    # Agrupar por grupo de fase de grupos (A..L). Los partidos de eliminatoria
-    # van a una sección aparte al final.
-    groups_order = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
-    by_group = {}
-    knockout = []
-
-    for p in predictions:
-        item = {"prediction": p, "state": get_state(p)}
-        g = p.match.group
-        if g:
-            by_group.setdefault(g, []).append(item)
-        else:
-            knockout.append(item)
-
-    predictions_by_group = [
-        {"grupo": g, "predicciones": by_group[g]}
-        for g in groups_order
-        if g in by_group
-    ]
-
     return render(
         request,
         "predictions/mis_predicciones.html",
-        {
-            "tournament": tournament,
-            "predictions_by_group": predictions_by_group,
-            "knockout_predictions": knockout,
-        },
+        {"tournament": tournament},
     )
 
 
@@ -269,51 +148,18 @@ def ranking(request, tournament_id):
         messages.error(request, "No eres miembro de este torneo.")
         return redirect("mis_torneos")
 
-    members = TournamentMember.objects.filter(tournament=tournament).select_related(
-        "user"
-    )
-
-    def get_medal(position):
-        if position == 1:
-            return "gold"
-        elif position == 2:
-            return "silver"
-        elif position == 3:
-            return "bronze"
-        return ""
+    members = TournamentMember.objects.filter(tournament=tournament).select_related("user")
 
     ranking_list = []
-    for member in members:
-        predictions = Prediction.objects.filter(user=member.user, tournament=tournament)
-        total_points = sum(p.points for p in predictions if p.points is not None)
-        exact_results = sum(1 for p in predictions if p.points == 3)
-        ranking_list.append(
-            {
-                "user": member.user,
-                "points": total_points,
-                "exact_results": exact_results,
-                "initials": member.user.username[:2].upper(),
-            }
-        )
+    for i, member in enumerate(members, start=1):
+        ranking_list.append({
+            "user": member.user,
+            "points": 0,
+            "position": i,
+            "medal": "",
+            "initials": member.user.username[:2].upper(),
+        })
 
-    ranking_list.sort(key=lambda x: x["points"], reverse=True)
-
-    for i, item in enumerate(ranking_list, start=1):
-        item["position"] = i
-        item["medal"] = get_medal(i)
-
-    # Premio "Más exacto" — el usuario con más resultados exactos (3 pts)
-    max_exact = max((item["exact_results"] for item in ranking_list), default=0)
-    most_exact_users = [
-        item["user"].username
-        for item in ranking_list
-        if item["exact_results"] == max_exact and max_exact > 0
-    ]
-
-    # Premios especiales — comparar predicciones contra ganadores reales
-    # Los ganadores reales se cargan desde el Admin en SpecialPrediction del superusuario
-    # Por convención: si existe un registro con user=None no aplica aún,
-    # usamos campos separados en Tournament (los agregamos en la siguiente fase)
     special_predictions = SpecialPrediction.objects.filter(
         tournament=tournament, user__in=[m.user for m in members]
     ).select_related("user")
@@ -324,7 +170,7 @@ def ranking(request, tournament_id):
         {
             "tournament": tournament,
             "ranking_list": ranking_list,
-            "most_exact_users": most_exact_users,
+            "most_exact_users": [],
             "special_predictions": special_predictions,
         },
     )
@@ -343,7 +189,6 @@ def predicciones_especiales(request, tournament_id):
     deadline = settings.SPECIAL_PREDICTIONS_DEADLINE
     is_open = timezone.now() < deadline
 
-    # Obtener predicción existente si la hay
     special = SpecialPrediction.objects.filter(
         user=request.user,
         tournament=tournament,
