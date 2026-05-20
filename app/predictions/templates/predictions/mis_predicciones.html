@@ -313,6 +313,76 @@
 
     /* read-only terceros */
     .read-only .drag-handle { opacity: 0.2; cursor: default; }
+
+    /* ── Save groups button ── */
+    .save-groups-row {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .btn-save-groups {
+        background: var(--gold);
+        color: #0a0e1a;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 12px 48px;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        cursor: pointer;
+        min-width: 300px;
+        transition: opacity 0.15s;
+    }
+
+    .btn-save-groups:hover:not(:disabled) { opacity: 0.85; }
+
+    .btn-save-groups:disabled {
+        background: var(--text-muted);
+        cursor: not-allowed;
+        opacity: 1;
+    }
+
+    @media (max-width: 520px) {
+        .btn-save-groups { width: 100%; min-width: unset; }
+    }
+
+    /* ── Top-right toast ── */
+    .top-toast {
+        position: fixed;
+        top: 72px;
+        right: 24px;
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        padding: 10px 20px;
+        border-radius: var(--radius-sm);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(-8px);
+        transition: opacity 0.25s, transform 0.25s;
+        z-index: 200;
+    }
+
+    .top-toast.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .top-toast.toast-ok {
+        background: #1a3a2a;
+        border: 1px solid #2a6a4a;
+        color: #6fcf97;
+    }
+
+    .top-toast.toast-err {
+        background: #3a1a1a;
+        border: 1px solid #6a2a2a;
+        color: #eb5757;
+    }
 </style>
 {% endblock %}
 
@@ -348,6 +418,12 @@
             <div class="save-indicator" id="si-{{ g.group }}"></div>
         </div>
         {% endfor %}
+    </div>
+
+    <div class="save-groups-row">
+        <button id="btn-save-groups" class="btn-save-groups" onclick="saveAllGroups()">
+            Guardar predicciones de grupos
+        </button>
     </div>
 </div>
 
@@ -407,6 +483,7 @@
 </div>
 
 <div id="toast" class="toast"></div>
+<div id="top-toast" class="top-toast"></div>
 {% endblock %}
 
 {% block extra_js %}
@@ -482,37 +559,48 @@ function updateGroupBadges(listEl) {
     });
 }
 
-function autoSaveGroup(groupLetter) {
-    const list  = document.getElementById('sort-' + groupLetter);
-    const items = Array.from(list.querySelectorAll('.team-item'));
-    const ids   = items.map(el => el.dataset.id);
+function showTopToast(msg, type) {
+    const t = document.getElementById('top-toast');
+    t.textContent = msg;
+    t.className = 'top-toast toast-' + type + ' visible';
+    setTimeout(() => t.classList.remove('visible'), 3000);
+}
 
-    showSaving(groupLetter);
-    post(
-        `/torneo/${TOURNAMENT_ID}/mis-predicciones/grupo/${groupLetter}/`,
-        { first: ids[0] ?? null, second: ids[1] ?? null, third: ids[2] ?? null }
-    )
-    .then(data => {
-        if (data.ok) {
-            showSaved(groupLetter);
-            if (data.ranking_updated) showToast('Ranking de terceros actualizado.');
+async function saveAllGroups() {
+    const btn = document.getElementById('btn-save-groups');
+    btn.disabled = true;
+    btn.textContent = 'Guardando…';
+
+    const promises = Array.from(document.querySelectorAll('.sortable-group')).map(list => {
+        const group = list.id.replace('sort-', '');
+        const ids   = Array.from(list.querySelectorAll('.team-item')).map(el => el.dataset.id);
+        return post(
+            `/torneo/${TOURNAMENT_ID}/mis-predicciones/grupo/${group}/`,
+            { first: ids[0] ?? null, second: ids[1] ?? null, third: ids[2] ?? null }
+        );
+    });
+
+    try {
+        const results = await Promise.all(promises);
+        if (results.every(r => r.ok)) {
+            showTopToast('Predicciones de grupos guardadas', 'ok');
         } else {
-            showSaveError(groupLetter);
+            showTopToast('No se pudieron guardar tus predicciones, intentá de nuevo', 'err');
         }
-    })
-    .catch(() => showSaveError(groupLetter));
+    } catch {
+        showTopToast('No se pudieron guardar tus predicciones, intentá de nuevo', 'err');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar predicciones de grupos';
+    }
 }
 
 document.querySelectorAll('.sortable-group').forEach(list => {
-    const group = list.id.replace('sort-', '');
     updateGroupBadges(list);
     Sortable.create(list, {
         handle:    '.drag-handle',
         animation: 150,
-        onEnd() {
-            updateGroupBadges(list);
-            autoSaveGroup(group);
-        },
+        onEnd() { updateGroupBadges(list); },
     });
 });
 
