@@ -243,7 +243,6 @@
             {% endif %}
         </div>
         <div class="torneo-actions">
-            <a href="{% url 'fixture' item.membership.tournament.id %}">Fixture</a>
             <a href="{% url 'bracket' item.membership.tournament.id %}">Bracket</a>
             <a href="{% url 'mis_predicciones' item.membership.tournament.id %}">Predicciones</a>
             <a href="{% url 'predicciones_especiales' item.membership.tournament.id %}">Especiales</a>
