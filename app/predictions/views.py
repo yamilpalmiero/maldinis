@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 
 from .models import (
     Match, SpecialPrediction, GroupPrediction,
-    ThirdPlaceRanking, ThirdPlaceRankingEntry,
+    ThirdPlaceRanking, ThirdPlaceRankingEntry, BracketPrediction,
 )
 from tournaments.models import Tournament, TournamentMember
 from .services.bracket_resolver import resolve_user_bracket
@@ -89,22 +89,31 @@ def bracket(request, tournament_id):
                 "away":  away,
             })
 
-        rondas = {
-            "r32":     matches_by_stage[Match.Stage.ROUND_OF_32],
-            "r16":     matches_by_stage[Match.Stage.ROUND_OF_16],
-            "cuartos": matches_by_stage[Match.Stage.QUARTER_FINAL],
-            "semis":   matches_by_stage[Match.Stage.SEMI_FINAL],
-            "final":   matches_by_stage[Match.Stage.FINAL],
-        }
-        final_match = rondas["final"][0] if rondas["final"] else None
+        rondas_list = [
+            {"label": "16avos",  "matches": matches_by_stage[Match.Stage.ROUND_OF_32]},
+            {"label": "Octavos", "matches": matches_by_stage[Match.Stage.ROUND_OF_16]},
+            {"label": "Cuartos", "matches": matches_by_stage[Match.Stage.QUARTER_FINAL]},
+            {"label": "Semis",   "matches": matches_by_stage[Match.Stage.SEMI_FINAL]},
+            {"label": "Final",   "matches": matches_by_stage[Match.Stage.FINAL]},
+        ]
+        final_matches = matches_by_stage[Match.Stage.FINAL]
+        final_match = final_matches[0] if final_matches else None
+
+        champion = None
+        if final_match:
+            bp = BracketPrediction.objects.filter(
+                user=request.user, tournament=tournament, match=final_match["match"]
+            ).select_related("predicted_winner").first()
+            champion = bp.predicted_winner if bp else None
 
     return render(request, "predictions/bracket.html", {
         "tournament":         tournament,
         "grupos_guardados":   grupos_guardados,
         "terceros_guardados": terceros_guardados,
         "bracket_listo":      bracket_listo,
-        "rondas":             rondas,
-        "final_match":        final_match,
+        "rondas_list":        rondas_list if bracket_listo else None,
+        "final_match":        final_match if bracket_listo else None,
+        "champion":           champion if bracket_listo else None,
     })
 
 

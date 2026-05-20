@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load flag_tags %}
 
 {% block title %}Bracket — Tu predicción{% endblock %}
 
@@ -90,8 +91,81 @@
         text-transform: uppercase;
         padding-bottom: 8px;
         border-bottom: 1px solid var(--border);
-        margin-bottom: 16px;
+        margin-bottom: 12px;
         text-align: center;
+    }
+
+    .round-matches {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* ── Match card ── */
+    .bracket-match {
+        background: var(--bg-card);
+        border-radius: var(--radius-sm);
+        padding: 5px;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .bracket-match--complete {
+        border: 1px solid rgba(201, 162, 39, 0.3);
+    }
+
+    .bracket-match--incomplete {
+        border: 1px dashed rgba(201, 162, 39, 0.22);
+    }
+
+    /* ── Slot ── */
+    .bracket-slot {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 6px;
+        border-radius: 3px;
+        min-height: 26px;
+    }
+
+    .bracket-slot--empty {
+        background: rgba(255, 255, 255, 0.03);
+        min-height: 26px;
+    }
+
+    .bracket-flag {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .bracket-team-name {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .bracket-vs {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 9px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-align: center;
+        letter-spacing: 1px;
+        line-height: 1;
+        padding: 0 2px;
     }
 
     /* ── Champion card ── */
@@ -100,9 +174,10 @@
         background: var(--bg-card);
         border: 1px solid rgba(201, 162, 39, 0.28);
         border-radius: 12px;
-        padding: 20px 28px;
+        padding: 20px 24px;
         text-align: center;
-        min-width: 140px;
+        min-width: 150px;
+        max-width: 180px;
     }
 
     .champion-label {
@@ -115,11 +190,36 @@
         margin-bottom: 14px;
     }
 
-    .champion-slot {
+    .champion-unknown {
         font-family: 'Barlow Condensed', sans-serif;
         font-size: 32px;
         font-weight: 600;
         color: var(--text-muted);
+    }
+
+    .champion-team {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .champion-flag {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.4);
+    }
+
+    .champion-name {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gold);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        word-break: break-word;
     }
 </style>
 {% endblock %}
@@ -144,29 +244,57 @@
 </div>
 {% else %}
 <div class="bracket-layout">
+
     <div class="bracket-rounds-scroll">
         <div class="bracket-rounds">
+            {% for round in rondas_list %}
             <div class="bracket-round">
-                <div class="round-label">16avos</div>
+                <div class="round-label">{{ round.label }}</div>
+                <div class="round-matches">
+                    {% for item in round.matches %}
+                    <div class="bracket-match {% if item.home and item.away %}bracket-match--complete{% else %}bracket-match--incomplete{% endif %}">
+                        {# Home slot #}
+                        {% if item.home %}
+                        {% flag_url item.home.code as hflag %}
+                        <div class="bracket-slot bracket-slot--filled">
+                            {% if hflag %}<img class="bracket-flag" src="{{ hflag }}" alt="">{% endif %}
+                            <span class="bracket-team-name">{{ item.home.name }}</span>
+                        </div>
+                        {% else %}
+                        <div class="bracket-slot bracket-slot--empty"></div>
+                        {% endif %}
+                        <div class="bracket-vs">vs</div>
+                        {# Away slot #}
+                        {% if item.away %}
+                        {% flag_url item.away.code as aflag %}
+                        <div class="bracket-slot bracket-slot--filled">
+                            {% if aflag %}<img class="bracket-flag" src="{{ aflag }}" alt="">{% endif %}
+                            <span class="bracket-team-name">{{ item.away.name }}</span>
+                        </div>
+                        {% else %}
+                        <div class="bracket-slot bracket-slot--empty"></div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
-            <div class="bracket-round">
-                <div class="round-label">Octavos</div>
-            </div>
-            <div class="bracket-round">
-                <div class="round-label">Cuartos</div>
-            </div>
-            <div class="bracket-round">
-                <div class="round-label">Semis</div>
-            </div>
-            <div class="bracket-round">
-                <div class="round-label">Final</div>
-            </div>
+            {% endfor %}
         </div>
     </div>
+
     <div class="bracket-champion">
         <div class="champion-label">CAMPEÓN 🏆</div>
-        <div class="champion-slot">?</div>
+        {% if champion %}
+        {% flag_url champion.code as cflag %}
+        <div class="champion-team">
+            {% if cflag %}<img class="champion-flag" src="{{ cflag }}" alt="">{% endif %}
+            <span class="champion-name">{{ champion.name }}</span>
+        </div>
+        {% else %}
+        <div class="champion-unknown">?</div>
+        {% endif %}
     </div>
+
 </div>
 {% endif %}
 {% endblock %}
