@@ -57,7 +57,7 @@
     .groups-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+        gap: 12px;
     }
 
     @media (max-width: 800px) { .groups-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -66,19 +66,20 @@
     /* ── Group card ── */
     .group-card {
         background: var(--bg-card);
-        border: 0.5px solid var(--border);
-        border-radius: var(--radius);
-        padding: 12px 12px 8px;
+        border: 1px solid rgba(201, 162, 39, 0.28);
+        border-radius: 12px;
+        padding: 16px 14px 12px;
     }
 
     .group-card-label {
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 10px;
+        font-size: 17px;
         font-weight: 600;
         color: var(--gold);
-        letter-spacing: 2px;
+        letter-spacing: 1px;
         text-transform: uppercase;
-        margin-bottom: 8px;
+        text-align: center;
+        margin-bottom: 12px;
     }
 
     /* ── Sortable team list ── */
@@ -86,72 +87,77 @@
         list-style: none;
         padding: 0;
         margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
     }
 
+    /* ── Team pill ── */
     .team-item {
         display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 5px 4px;
-        border-radius: var(--radius-sm);
+        gap: 8px;
+        padding: 6px 10px 6px 8px;
+        border-radius: 20px;
+        border: 1px solid transparent;
         cursor: default;
         user-select: none;
-        transition: background 0.1s;
+        transition: opacity 0.15s, border-color 0.15s, background 0.15s;
     }
 
-    .team-item:hover {
-        background: rgba(255,255,255,0.03);
+    /* State: positions 1 & 2 — green (classifies) */
+    .team-item.state-qualify {
+        background: rgba(74, 222, 128, 0.07);
+        border-color: rgba(74, 222, 128, 0.28);
     }
+    .team-item.state-qualify .team-name { color: #4ade80; }
+    .team-item.state-qualify .pos-badge { color: #4ade80; }
 
-    .team-item.sortable-ghost {
-        opacity: 0.3;
+    /* State: position 3 — gold (third place) */
+    .team-item.state-third {
+        background: rgba(201, 162, 39, 0.09);
+        border-color: rgba(201, 162, 39, 0.32);
     }
+    .team-item.state-third .team-name { color: var(--gold); }
+    .team-item.state-third .pos-badge { color: var(--gold); }
 
-    .team-item.sortable-chosen {
-        background: var(--gold-subtle);
-        border-radius: var(--radius-sm);
+    /* State: position 4 — neutral (out) */
+    .team-item.state-out {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: transparent;
     }
+    .team-item.state-out .team-name { color: var(--text-secondary); }
+    .team-item.state-out .pos-badge { visibility: hidden; }
+
+    .team-item.sortable-ghost  { opacity: 0.25; }
+    .team-item.sortable-chosen { opacity: 0.85; }
 
     .drag-handle {
         cursor: grab;
         color: var(--text-muted);
-        font-size: 13px;
+        font-size: 12px;
         flex-shrink: 0;
-        padding: 0 2px;
-        opacity: 0.5;
+        opacity: 0.35;
         transition: opacity 0.15s;
+        line-height: 1;
     }
 
-    .team-item:hover .drag-handle { opacity: 1; }
-
-    .pos-badge {
-        font-family: 'Barlow Condensed', sans-serif;
-        font-size: 11px;
-        font-weight: 600;
-        width: 18px;
-        text-align: right;
-        flex-shrink: 0;
-    }
-
-    .pos-badge.badge-gold   { color: var(--gold); }
-    .pos-badge.badge-silver { color: #a0a0b0; }
-    .pos-badge.badge-bronze { color: #b87333; }
-    .pos-badge.badge-dim    { color: var(--text-muted); }
+    .team-item:hover .drag-handle { opacity: 0.75; }
 
     .team-flag {
-        width: 18px;
-        height: auto;
-        border-radius: 2px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        object-fit: cover;
         flex-shrink: 0;
-        box-shadow: 0 0 0 0.5px rgba(255,255,255,0.1);
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.1);
     }
 
     .team-name {
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
         letter-spacing: 0.3px;
-        color: var(--text-primary);
         text-transform: uppercase;
         flex: 1;
         white-space: nowrap;
@@ -161,14 +167,14 @@
         transition: color 0.1s;
     }
 
-    .team-name.dim-name { color: var(--text-muted); }
-
-    .no-clasifica-tag {
-        font-size: 10px;
-        color: var(--text-muted);
-        font-style: italic;
-        white-space: nowrap;
+    .pos-badge {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 12px;
+        font-weight: 600;
         flex-shrink: 0;
+        min-width: 20px;
+        text-align: right;
+        transition: color 0.1s;
     }
 
     /* ── Save indicator (per group card) ── */
@@ -332,10 +338,9 @@
                 {% flag_url team.code as tflag %}
                 <li class="team-item" data-id="{{ team.id }}">
                     <span class="drag-handle">⠿</span>
-                    <span class="pos-badge"></span>
                     {% if tflag %}<img class="team-flag" src="{{ tflag }}" alt="{{ team.code }}">{% endif %}
                     <span class="team-name">{{ team.name }}</span>
-                    <span class="no-clasifica-tag" style="display:none">No clasifica</span>
+                    <span class="pos-badge"></span>
                 </li>
                 {% endif %}
                 {% endfor %}
@@ -460,23 +465,20 @@ function showToast(msg) {
 
 // ── Group cards ───────────────────────────────────────────────────────────────
 
-const BADGE_CFG = [
-    { label: '1°', cls: 'badge-gold' },
-    { label: '2°', cls: 'badge-silver' },
-    { label: '3°', cls: 'badge-bronze' },
-    { label: '4°', cls: 'badge-dim' },
+const STATE_CFG = [
+    { state: 'state-qualify', label: '1°' },
+    { state: 'state-qualify', label: '2°' },
+    { state: 'state-third',   label: '3°' },
+    { state: 'state-out',     label: ''   },
 ];
 
 function updateGroupBadges(listEl) {
     Array.from(listEl.querySelectorAll('.team-item')).forEach((item, i) => {
-        const cfg  = BADGE_CFG[i] ?? { label: '', cls: 'badge-dim' };
+        const cfg   = STATE_CFG[i] ?? { state: 'state-out', label: '' };
         const badge = item.querySelector('.pos-badge');
-        const name  = item.querySelector('.team-name');
-        const tag   = item.querySelector('.no-clasifica-tag');
-        badge.textContent = cfg.label;
-        badge.className   = 'pos-badge ' + cfg.cls;
-        name.classList.toggle('dim-name', i === 3);
-        if (tag) tag.style.display = i === 3 ? '' : 'none';
+        item.classList.remove('state-qualify', 'state-third', 'state-out');
+        item.classList.add(cfg.state);
+        if (badge) badge.textContent = cfg.label;
     });
 }
 
