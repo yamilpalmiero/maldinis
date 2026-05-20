@@ -1,14 +1,13 @@
 {% extends 'base.html' %}
-{% load flag_tags %}
 
-{% block title %}Bracket — Mundial 2026{% endblock %}
+{% block title %}Bracket — Tu predicción{% endblock %}
 
 {% block extra_css %}
 <style>
-    .main-content {
-        max-width: 100% !important;
-    }
+    /* Override main content width for full-width bracket */
+    .main-content { max-width: 100% !important; }
 
+    /* Header stays narrow */
     .bracket-header {
         max-width: 1000px;
         margin: 0 auto 28px;
@@ -24,37 +23,65 @@
         letter-spacing: 1px;
     }
 
-    .bracket-subtitle {
-        font-size: 13px;
-        color: var(--text-muted);
+    /* ── Empty state ── */
+    .bracket-empty {
+        max-width: 480px;
+        margin: 60px auto;
+        text-align: center;
+        padding: 0 24px;
     }
 
-    .bracket-scroll {
+    .bracket-empty-icon {
+        display: block;
+        font-size: 40px;
+        line-height: 1;
+        margin-bottom: 16px;
+    }
+
+    .bracket-empty-title {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+    }
+
+    .bracket-empty-msg {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 24px;
+    }
+
+    /* ── Bracket layout ── */
+    .bracket-layout {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 0 24px 32px;
+    }
+
+    .bracket-rounds-scroll {
+        flex: 1;
         overflow-x: auto;
-        padding: 8px 24px 24px;
+        min-width: 0;
         -webkit-overflow-scrolling: touch;
     }
 
-    .bracket-stage {
+    .bracket-rounds {
         display: flex;
-        gap: 32px;
+        gap: 16px;
         min-width: max-content;
     }
 
-    .bracket-column {
-        display: flex;
-        flex-direction: column;
+    .bracket-round {
         width: 200px;
         flex-shrink: 0;
     }
 
-    .bracket-column:last-child .column-matches {
-        justify-content: center;
-        flex: 1;
-        gap: 16px;
-    }
-
-    .column-label {
+    .round-label {
         font-family: 'Barlow Condensed', sans-serif;
         font-size: 11px;
         font-weight: 600;
@@ -67,140 +94,79 @@
         text-align: center;
     }
 
-    .column-matches {
-        display: flex;
-        flex-direction: column;
-        justify-content: space-around;
-        flex: 1;
-        gap: 8px;
-    }
-
-    .bracket-card {
-        background: var(--bg-card);
-        border: 0.5px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 8px 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .bracket-card.no-teams {
-        opacity: 0.45;
-    }
-
-    .bracket-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        height: 22px;
-    }
-
-    .team-flag-mini {
-        width: 18px;
-        height: auto;
-        border-radius: 1px;
+    /* ── Champion card ── */
+    .bracket-champion {
         flex-shrink: 0;
-        box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+        background: var(--bg-card);
+        border: 1px solid rgba(201, 162, 39, 0.28);
+        border-radius: 12px;
+        padding: 20px 28px;
+        text-align: center;
+        min-width: 140px;
     }
 
-    .team-label {
+    .champion-label {
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 600;
-        letter-spacing: 0.5px;
+        color: var(--gold);
+        letter-spacing: 2px;
         text-transform: uppercase;
-        color: var(--text-primary);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        flex: 1;
-        min-width: 0;
+        margin-bottom: 14px;
     }
 
-    .team-source {
+    .champion-slot {
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 12px;
-        font-weight: 500;
-        letter-spacing: 0.5px;
+        font-size: 32px;
+        font-weight: 600;
         color: var(--text-muted);
-        text-transform: uppercase;
-        font-style: italic;
-        flex: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
-
-    .card-meta {
-        font-size: 9px;
-        color: var(--text-muted);
-        letter-spacing: 0.5px;
-        text-align: center;
-        margin-top: 2px;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 24px;
-        color: var(--text-muted);
-        font-size: 14px;
-    }
-
-    @media (max-width: 900px) {
-        .scroll-hint { display: block; text-align: center; font-size: 11px; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 1px; }
-    }
-    .scroll-hint { display: none; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="bracket-header">
-    <div>
-        <h1 class="bracket-title">Bracket</h1>
-        <span class="bracket-subtitle">Fase eliminatoria — próximamente podrás hacer tus predicciones</span>
-    </div>
+    <h1 class="bracket-title">Bracket</h1>
 </div>
 
-{% if bracket_columns.0.partidos %}
-<div class="scroll-hint">← Desliza para ver todas las rondas →</div>
-<div class="bracket-scroll">
-    <div class="bracket-stage">
-        {% for column in bracket_columns %}
-        <div class="bracket-column">
-            <div class="column-label">{{ column.label }}</div>
-            <div class="column-matches">
-                {% for item in column.partidos %}
-                <div class="bracket-card {% if not item.match.home_team or not item.match.away_team %}no-teams{% endif %}">
-                    <div class="bracket-row">
-                        {% if item.match.home_team %}
-                            {% flag_url item.match.home_team.code as home_flag %}
-                            {% if home_flag %}<img class="team-flag-mini" src="{{ home_flag }}" alt="{{ item.match.home_team.code }}">{% endif %}
-                            <span class="team-label">{{ item.match.home_team.code }}</span>
-                        {% else %}
-                            <span class="team-source">{{ item.match.home_source }}</span>
-                        {% endif %}
-                    </div>
-                    <div class="bracket-row">
-                        {% if item.match.away_team %}
-                            {% flag_url item.match.away_team.code as away_flag %}
-                            {% if away_flag %}<img class="team-flag-mini" src="{{ away_flag }}" alt="{{ item.match.away_team.code }}">{% endif %}
-                            <span class="team-label">{{ item.match.away_team.code }}</span>
-                        {% else %}
-                            <span class="team-source">{{ item.match.away_source }}</span>
-                        {% endif %}
-                    </div>
-                    <div class="card-meta">{{ item.match.match_datetime|date:"d/m H:i" }}</div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endfor %}
-    </div>
+{% if not bracket_listo %}
+<div class="bracket-empty">
+    <span class="bracket-empty-icon">🏆</span>
+    <h2 class="bracket-empty-title">Tu bracket está vacío</h2>
+    {% if not grupos_guardados and not terceros_guardados %}
+    <p class="bracket-empty-msg">Guardá tus predicciones de grupos y el ranking de terceros para armar tu bracket.</p>
+    {% elif not grupos_guardados %}
+    <p class="bracket-empty-msg">Guardá primero tus predicciones de grupos.</p>
+    {% else %}
+    <p class="bracket-empty-msg">Guardá tu ranking de terceros.</p>
+    {% endif %}
+    <a href="{% url 'mis_predicciones' tournament.id %}" class="btn-primary">Ir a mis predicciones</a>
 </div>
 {% else %}
-<div class="empty-state">
-    Los partidos de la fase eliminatoria aún no están cargados.
+<div class="bracket-layout">
+    <div class="bracket-rounds-scroll">
+        <div class="bracket-rounds">
+            <div class="bracket-round">
+                <div class="round-label">16avos</div>
+            </div>
+            <div class="bracket-round">
+                <div class="round-label">Octavos</div>
+            </div>
+            <div class="bracket-round">
+                <div class="round-label">Cuartos</div>
+            </div>
+            <div class="bracket-round">
+                <div class="round-label">Semis</div>
+            </div>
+            <div class="bracket-round">
+                <div class="round-label">Final</div>
+            </div>
+        </div>
+    </div>
+    <div class="bracket-champion">
+        <div class="champion-label">CAMPEÓN 🏆</div>
+        <div class="champion-slot">?</div>
+    </div>
 </div>
 {% endif %}
 {% endblock %}

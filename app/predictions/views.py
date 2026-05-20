@@ -13,6 +13,7 @@ from .models import (
     ThirdPlaceRanking, ThirdPlaceRankingEntry,
 )
 from tournaments.models import Tournament, TournamentMember
+from .services.bracket_resolver import resolve_user_bracket
 
 _GROUPS = list("ABCDEFGHIJKL")
 
@@ -49,51 +50,61 @@ def bracket(request, tournament_id):
         messages.error(request, "No eres miembro de este torneo.")
         return redirect("mis_torneos")
 
-    knockout_stages = [
-        Match.Stage.ROUND_OF_32,
-        Match.Stage.ROUND_OF_16,
-        Match.Stage.QUARTER_FINAL,
-        Match.Stage.SEMI_FINAL,
-        Match.Stage.THIRD_PLACE,
-        Match.Stage.FINAL,
-    ]
-
-    matches = (
-        Match.objects.filter(stage__in=knockout_stages)
-        .select_related("home_team", "away_team")
-        .order_by("match_datetime")
+    # Prerequisites
+    existing_preds = GroupPrediction.objects.filter(user=request.user, tournament=tournament)
+    completed_groups = sum(
+        1 for gp in existing_preds
+        if gp.first_team_id and gp.second_team_id and gp.third_team_id
     )
+    grupos_guardados = completed_groups == 12
+    terceros_guardados = ThirdPlaceRanking.objects.filter(
+        user=request.user, tournament=tournament
+    ).exists()
+    bracket_listo = grupos_guardados and terceros_guardados
 
-    stage_labels = {
-        Match.Stage.ROUND_OF_32:   "Dieciseisavos",
-        Match.Stage.ROUND_OF_16:   "Octavos",
-        Match.Stage.QUARTER_FINAL: "Cuartos",
-        Match.Stage.SEMI_FINAL:    "Semis",
-        Match.Stage.THIRD_PLACE:   "3er puesto",
-        Match.Stage.FINAL:         "Final",
-    }
+    rondas = None
+    final_match = None
 
-    matches_by_stage = {stage: [] for stage in knockout_stages}
-    for match in matches:
-        matches_by_stage[match.stage].append({"match": match})
+    if bracket_listo:
+        knockout_stages = [
+            Match.Stage.ROUND_OF_32,
+            Match.Stage.ROUND_OF_16,
+            Match.Stage.QUARTER_FINAL,
+            Match.Stage.SEMI_FINAL,
+            Match.Stage.FINAL,
+        ]
+        knockout_matches = list(
+            Match.objects.filter(stage__in=knockout_stages)
+            .select_related("home_team", "away_team")
+            .order_by("match_datetime")
+        )
+        resolved = resolve_user_bracket(request.user, tournament, knockout_matches)
 
-    bracket_columns = [
-        {"label": stage_labels[Match.Stage.ROUND_OF_32],   "partidos": matches_by_stage[Match.Stage.ROUND_OF_32]},
-        {"label": stage_labels[Match.Stage.ROUND_OF_16],   "partidos": matches_by_stage[Match.Stage.ROUND_OF_16]},
-        {"label": stage_labels[Match.Stage.QUARTER_FINAL], "partidos": matches_by_stage[Match.Stage.QUARTER_FINAL]},
-        {"label": stage_labels[Match.Stage.SEMI_FINAL],    "partidos": matches_by_stage[Match.Stage.SEMI_FINAL]},
-        {
-            "label": "Final / 3er puesto",
-            "partidos": (
-                matches_by_stage[Match.Stage.FINAL]
-                + matches_by_stage[Match.Stage.THIRD_PLACE]
-            ),
-        },
-    ]
+        matches_by_stage = {stage: [] for stage in knockout_stages}
+        for match in knockout_matches:
+            home, away = resolved.get(match.id, (None, None))
+            matches_by_stage[match.stage].append({
+                "match": match,
+                "home":  home,
+                "away":  away,
+            })
+
+        rondas = {
+            "r32":     matches_by_stage[Match.Stage.ROUND_OF_32],
+            "r16":     matches_by_stage[Match.Stage.ROUND_OF_16],
+            "cuartos": matches_by_stage[Match.Stage.QUARTER_FINAL],
+            "semis":   matches_by_stage[Match.Stage.SEMI_FINAL],
+            "final":   matches_by_stage[Match.Stage.FINAL],
+        }
+        final_match = rondas["final"][0] if rondas["final"] else None
 
     return render(request, "predictions/bracket.html", {
-        "tournament": tournament,
-        "bracket_columns": bracket_columns,
+        "tournament":         tournament,
+        "grupos_guardados":   grupos_guardados,
+        "terceros_guardados": terceros_guardados,
+        "bracket_listo":      bracket_listo,
+        "rondas":             rondas,
+        "final_match":        final_match,
     })
 
 
