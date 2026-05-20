@@ -535,6 +535,7 @@ async function saveAllGroups() {
         const results = await Promise.all(promises);
         if (results.every(r => r.ok)) {
             showTopToast('Predicciones de grupos guardadas', 'ok');
+            setTimeout(() => window.location.reload(), 800);
         } else {
             showTopToast('No se pudieron guardar tus predicciones, intentá de nuevo', 'err');
         }
