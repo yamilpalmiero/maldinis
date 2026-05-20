@@ -229,61 +229,46 @@
         margin-bottom: 16px;
     }
 
-    /* ── Terceros layout ── */
-    .terceros-layout {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
+    /* ── Terceros card ── */
+    .terceros-card {
+        background: var(--bg-card);
+        border: 1px solid rgba(201, 162, 39, 0.28);
+        border-radius: 12px;
+        padding: 16px 14px 12px;
+        max-width: 640px;
     }
 
-    @media (max-width: 600px) { .terceros-layout { grid-template-columns: 1fr; } }
-
-    .terceros-col-label {
+    .terceros-card-subtitle {
         font-family: 'Barlow Condensed', sans-serif;
-        font-size: 10px;
-        font-weight: 600;
-        color: var(--gold);
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 8px;
+        font-size: 11px;
+        color: var(--text-muted);
+        text-align: center;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
     }
 
-    .terceros-col-label.dim { color: var(--text-muted); }
-
-    .tercero-list {
+    .sortable-terceros {
         list-style: none;
         padding: 0;
         margin: 0;
-        min-height: 48px;
-    }
-
-    .tercero-item {
         display: flex;
-        align-items: center;
-        gap: 6px;
-        background: var(--bg-card);
-        border: 0.5px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 7px 10px;
-        margin-bottom: 5px;
-        cursor: default;
-        user-select: none;
-        transition: border-color 0.15s, background 0.15s;
+        flex-direction: column;
+        gap: 5px;
     }
 
-    .tercero-item:last-child { margin-bottom: 0; }
+    /* Show position number for out-state rows (override group card default) */
+    .terceros-card .team-item.state-out .pos-badge {
+        visibility: visible;
+        color: var(--text-muted);
+    }
 
-    .tercero-item.sortable-ghost   { opacity: 0.3; }
-    .tercero-item.sortable-chosen  { background: var(--gold-subtle); border-color: var(--border-gold); }
+    .terceros-card .team-item.state-out .team-name {
+        color: var(--text-muted);
+    }
 
-    .tercero-pos {
-        font-family: 'Barlow Condensed', sans-serif;
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--gold);
-        width: 18px;
-        text-align: right;
-        flex-shrink: 0;
+    /* Visual cut between rank 8 (qualifies) and rank 9 (out) */
+    .team-item.tercero-cut {
+        margin-top: 14px;
     }
 
     .tercero-group-tag {
@@ -298,21 +283,6 @@
         letter-spacing: 0.5px;
         flex-shrink: 0;
     }
-
-    .tercero-list-empty {
-        font-size: 12px;
-        color: var(--text-muted);
-        padding: 12px 0;
-        text-align: center;
-        font-style: italic;
-    }
-
-    .terceros-save-row {
-        margin-top: 8px;
-    }
-
-    /* read-only terceros */
-    .read-only .drag-handle { opacity: 0.2; cursor: default; }
 
     /* ── Terceros empty state ── */
     .terceros-empty-state {
@@ -465,43 +435,31 @@
         <p>Guardá primero tus predicciones de grupos para rankear a los terceros.</p>
     </div>
     {% else %}
-    <div class="terceros-layout">
-        <div>
-            <div class="terceros-col-label">Clasifican al bracket (1–8)</div>
-            <ul class="tercero-list" id="terceros-ranked">
-                {% for entry in saved_entries %}
-                {% flag_url entry.team.code as tflag %}
-                <li class="tercero-item" data-id="{{ entry.team.id }}">
-                    <span class="drag-handle">⠿</span>
-                    <span class="tercero-pos"></span>
-                    {% if tflag %}<img class="team-flag" src="{{ tflag }}" alt="{{ entry.team.code }}">{% endif %}
-                    <span class="team-name">{{ entry.team.name }}</span>
-                    <span class="tercero-group-tag">{{ entry.group }}</span>
-                </li>
-                {% empty %}
-                <li class="tercero-list-empty" id="ranked-empty-msg">Arrastrá equipos aquí</li>
-                {% endfor %}
-            </ul>
-            <div class="save-indicator terceros-save-row" id="si-terceros"></div>
-        </div>
-
-        <div>
-            <div class="terceros-col-label dim">Sin clasificar / pool</div>
-            <ul class="tercero-list" id="terceros-unranked">
-                {% for item in unranked_terceros %}
-                {% flag_url item.team.code as tflag %}
-                <li class="tercero-item" data-id="{{ item.team.id }}">
-                    <span class="drag-handle">⠿</span>
-                    <span class="tercero-pos"></span>
-                    {% if tflag %}<img class="team-flag" src="{{ tflag }}" alt="{{ item.team.code }}">{% endif %}
-                    <span class="team-name">{{ item.team.name }}</span>
-                    <span class="tercero-group-tag">{{ item.group }}</span>
-                </li>
-                {% empty %}
-                <li class="tercero-list-empty">Todos rankeados</li>
-                {% endfor %}
-            </ul>
-        </div>
+    <div class="terceros-card">
+        <div class="terceros-card-subtitle">Los 8 primeros clasifican a octavos</div>
+        <ul class="sortable-terceros" id="terceros-list">
+            {% for entry in saved_entries %}
+            {% flag_url entry.team.code as tflag %}
+            <li class="team-item" data-id="{{ entry.team.id }}">
+                <span class="drag-handle">⠿</span>
+                {% if tflag %}<img class="team-flag" src="{{ tflag }}" alt="{{ entry.team.code }}">{% endif %}
+                <span class="team-name">{{ entry.team.name }}</span>
+                <span class="tercero-group-tag">{{ entry.group }}</span>
+                <span class="pos-badge"></span>
+            </li>
+            {% endfor %}
+            {% for item in unranked_terceros %}
+            {% flag_url item.team.code as tflag %}
+            <li class="team-item" data-id="{{ item.team.id }}">
+                <span class="drag-handle">⠿</span>
+                {% if tflag %}<img class="team-flag" src="{{ tflag }}" alt="{{ item.team.code }}">{% endif %}
+                <span class="team-name">{{ item.team.name }}</span>
+                <span class="tercero-group-tag">{{ item.group }}</span>
+                <span class="pos-badge"></span>
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="save-indicator" id="si-terceros"></div>
     </div>
     {% endif %}
 </div>
@@ -630,26 +588,22 @@ document.querySelectorAll('.sortable-group').forEach(list => {
 
 // ── Terceros ──────────────────────────────────────────────────────────────────
 
-const rankedEl   = document.getElementById('terceros-ranked');
-const unrankedEl = document.getElementById('terceros-unranked');
+const terceroListEl = document.getElementById('terceros-list');
 
 function updateTercerosBadges() {
-    Array.from(rankedEl.querySelectorAll('.tercero-item')).forEach((item, i) => {
-        const pos = item.querySelector('.tercero-pos');
-        if (pos) pos.textContent = (i + 1) + '°';
+    if (!terceroListEl) return;
+    Array.from(terceroListEl.querySelectorAll('.team-item')).forEach((item, i) => {
+        const badge = item.querySelector('.pos-badge');
+        item.classList.remove('state-qualify', 'state-third', 'state-out');
+        item.classList.toggle('tercero-cut', i === 8);
+        item.classList.add(i < 8 ? 'state-qualify' : 'state-out');
+        if (badge) badge.textContent = (i + 1) + '°';
     });
-    Array.from(unrankedEl.querySelectorAll('.tercero-item')).forEach(item => {
-        const pos = item.querySelector('.tercero-pos');
-        if (pos) pos.textContent = '';
-    });
-    // Toggle empty placeholder for ranked list
-    const emptyMsg = document.getElementById('ranked-empty-msg');
-    const count = rankedEl.querySelectorAll('.tercero-item').length;
-    if (emptyMsg) emptyMsg.style.display = count === 0 ? '' : 'none';
 }
 
 function autoSaveTerceros() {
-    const items = Array.from(rankedEl.querySelectorAll('.tercero-item'));
+    if (!terceroListEl) return;
+    const items = Array.from(terceroListEl.querySelectorAll('.team-item'));
     if (items.length < 8) return;
     const order = items.map(el => el.dataset.id).join(',');
     showSaving('terceros');
@@ -661,31 +615,9 @@ function autoSaveTerceros() {
     .catch(() => showSaveError('terceros'));
 }
 
-if (TERCEROS_COMPLETE && rankedEl && unrankedEl) {
+if (terceroListEl) {
     updateTercerosBadges();
-
-    const sharedGroup = { name: 'terceros', pull: true, put: true };
-
-    Sortable.create(rankedEl, {
-        group:     sharedGroup,
-        handle:    '.drag-handle',
-        animation: 150,
-        onMove(evt) {
-            // Block adding a 9th item to ranked
-            if (evt.to === rankedEl &&
-                evt.from !== rankedEl &&
-                rankedEl.querySelectorAll('.tercero-item').length >= 8) {
-                return false;
-            }
-        },
-        onEnd() {
-            updateTercerosBadges();
-            autoSaveTerceros();
-        },
-    });
-
-    Sortable.create(unrankedEl, {
-        group:     sharedGroup,
+    Sortable.create(terceroListEl, {
         handle:    '.drag-handle',
         animation: 150,
         onEnd() {
@@ -693,9 +625,6 @@ if (TERCEROS_COMPLETE && rankedEl && unrankedEl) {
             autoSaveTerceros();
         },
     });
-} else if (rankedEl) {
-    // Read-only: just update position badges
-    updateTercerosBadges();
 }
 </script>
 {% endblock %}
