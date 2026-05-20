@@ -459,7 +459,11 @@
             </li>
             {% endfor %}
         </ul>
-        <div class="save-indicator" id="si-terceros"></div>
+    </div>
+    <div class="save-groups-row">
+        <button id="btn-save-terceros" class="btn-save-groups" onclick="saveTerceros()">
+            Guardar ranking de terceros
+        </button>
     </div>
     {% endif %}
 </div>
@@ -473,7 +477,6 @@
 <script>
 const TOURNAMENT_ID = {{ tournament.id }};
 const CSRF_TOKEN    = '{{ csrf_token }}';
-const TERCEROS_COMPLETE = {{ terceros_complete|yesno:"true,false" }};
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -488,37 +491,10 @@ function post(url, body) {
     }).then(r => r.json());
 }
 
-function showSaving(id) {
-    const el = document.getElementById('si-' + id);
-    if (!el) return;
-    el.innerHTML = '<span class="si-saving">guardando…</span>';
-    el.style.opacity = '1';
-}
-
-function showSaved(id) {
-    const el = document.getElementById('si-' + id);
-    if (!el) return;
-    el.innerHTML = '<span class="si-ok">✓ guardado</span>';
-    el.style.opacity = '1';
-    setTimeout(() => {
-        el.style.transition = 'opacity 0.5s';
-        el.style.opacity = '0';
-        setTimeout(() => { el.innerHTML = ''; el.style.transition = ''; }, 500);
-    }, 1500);
-}
-
-function showSaveError(id) {
-    const el = document.getElementById('si-' + id);
-    if (!el) return;
-    el.innerHTML = '<span class="si-err">error al guardar</span>';
-    el.style.opacity = '1';
-    setTimeout(() => { el.innerHTML = ''; el.style.opacity = '0'; }, 3000);
-}
-
-function showToast(msg) {
-    const t = document.getElementById('toast');
+function showTopToast(msg, type) {
+    const t = document.getElementById('top-toast');
     t.textContent = msg;
-    t.classList.add('visible');
+    t.className = 'top-toast toast-' + type + ' visible';
     setTimeout(() => t.classList.remove('visible'), 3000);
 }
 
@@ -539,13 +515,6 @@ function updateGroupBadges(listEl) {
         item.classList.add(cfg.state);
         if (badge) badge.textContent = cfg.label;
     });
-}
-
-function showTopToast(msg, type) {
-    const t = document.getElementById('top-toast');
-    t.textContent = msg;
-    t.className = 'top-toast toast-' + type + ' visible';
-    setTimeout(() => t.classList.remove('visible'), 3000);
 }
 
 async function saveAllGroups() {
@@ -601,18 +570,31 @@ function updateTercerosBadges() {
     });
 }
 
-function autoSaveTerceros() {
-    if (!terceroListEl) return;
-    const items = Array.from(terceroListEl.querySelectorAll('.team-item'));
-    if (items.length < 8) return;
-    const order = items.map(el => el.dataset.id).join(',');
-    showSaving('terceros');
-    post(`/torneo/${TOURNAMENT_ID}/mis-predicciones/terceros/`, { order })
-    .then(data => {
-        if (data.ok) showSaved('terceros');
-        else showSaveError('terceros');
-    })
-    .catch(() => showSaveError('terceros'));
+async function saveTerceros() {
+    const btn = document.getElementById('btn-save-terceros');
+    if (!btn || !terceroListEl) return;
+    btn.disabled = true;
+    btn.textContent = 'Guardando…';
+
+    const order = Array.from(terceroListEl.querySelectorAll('.team-item'))
+        .map(el => el.dataset.id).join(',');
+
+    try {
+        const data = await post(
+            `/torneo/${TOURNAMENT_ID}/mis-predicciones/terceros/`,
+            { order }
+        );
+        if (data.ok) {
+            showTopToast('Ranking de terceros guardado', 'ok');
+        } else {
+            showTopToast('No se pudo guardar el ranking, intentá de nuevo', 'err');
+        }
+    } catch {
+        showTopToast('No se pudo guardar el ranking, intentá de nuevo', 'err');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar ranking de terceros';
+    }
 }
 
 if (terceroListEl) {
@@ -620,10 +602,7 @@ if (terceroListEl) {
     Sortable.create(terceroListEl, {
         handle:    '.drag-handle',
         animation: 150,
-        onEnd() {
-            updateTercerosBadges();
-            autoSaveTerceros();
-        },
+        onEnd() { updateTercerosBadges(); },
     });
 }
 </script>
