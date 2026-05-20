@@ -17,6 +17,21 @@ from .services.bracket_resolver import resolve_user_bracket
 
 _GROUPS = list("ABCDEFGHIJKL")
 
+_BRACKET_STAGES = [
+    Match.Stage.ROUND_OF_32,
+    Match.Stage.ROUND_OF_16,
+    Match.Stage.QUARTER_FINAL,
+    Match.Stage.SEMI_FINAL,
+    Match.Stage.FINAL,
+]
+
+
+def _source_match_id(source):
+    """Return the match.id from a 'W<id>' source code, or None."""
+    if source.startswith("W") and source[1:].isdigit():
+        return int(source[1:])
+    return None
+
 
 def _member_or_403(request, tournament):
     return TournamentMember.objects.filter(
@@ -66,27 +81,31 @@ def bracket(request, tournament_id):
     final_match = None
 
     if bracket_listo:
-        knockout_stages = [
-            Match.Stage.ROUND_OF_32,
-            Match.Stage.ROUND_OF_16,
-            Match.Stage.QUARTER_FINAL,
-            Match.Stage.SEMI_FINAL,
-            Match.Stage.FINAL,
-        ]
         knockout_matches = list(
-            Match.objects.filter(stage__in=knockout_stages)
+            Match.objects.filter(stage__in=_BRACKET_STAGES)
             .select_related("home_team", "away_team")
             .order_by("match_datetime")
         )
         resolved = resolve_user_bracket(request.user, tournament, knockout_matches)
 
-        matches_by_stage = {stage: [] for stage in knockout_stages}
+        winner_map = {
+            bp.match_id: bp.predicted_winner_id
+            for bp in BracketPrediction.objects.filter(
+                user=request.user, tournament=tournament,
+                match__stage__in=_BRACKET_STAGES,
+            )
+        }
+
+        matches_by_stage = {stage: [] for stage in _BRACKET_STAGES}
         for match in knockout_matches:
             home, away = resolved.get(match.id, (None, None))
             matches_by_stage[match.stage].append({
-                "match": match,
-                "home":  home,
-                "away":  away,
+                "match":                match,
+                "home":                 home,
+                "away":                 away,
+                "home_source_match_id": _source_match_id(match.home_source),
+                "away_source_match_id": _source_match_id(match.away_source),
+                "winner_id":            winner_map.get(match.id),
             })
 
         rondas_list = [
@@ -115,6 +134,66 @@ def bracket(request, tournament_id):
         "final_match":        final_match if bracket_listo else None,
         "champion":           champion if bracket_listo else None,
     })
+
+
+@login_required
+@require_POST
+def bracket_predict(request, tournament_id):
+    tournament = get_object_or_404(Tournament, id=tournament_id)
+
+    if not _member_or_403(request, tournament):
+        return JsonResponse({"ok": False, "error": "forbidden"}, status=403)
+
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"ok": False, "error": "invalid json"}, status=400)
+
+    try:
+        match_id = int(data.get("match_id"))
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "error": "invalid match_id"}, status=400)
+
+    winner_team_id = data.get("winner_team_id")
+
+    try:
+        match = Match.objects.get(id=match_id, stage__in=_BRACKET_STAGES)
+    except Match.DoesNotExist:
+        return JsonResponse({"ok": False, "error": "invalid match"}, status=400)
+
+    if winner_team_id is None:
+        BracketPrediction.objects.filter(
+            user=request.user, tournament=tournament, match=match
+        ).delete()
+        return JsonResponse({"ok": True})
+
+    try:
+        winner_team_id = int(winner_team_id)
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "error": "invalid winner_team_id"}, status=400)
+
+    # Validate winner is one of the two teams resolved for this match
+    knockout_matches = list(
+        Match.objects.filter(stage__in=_BRACKET_STAGES)
+        .select_related("home_team", "away_team")
+        .order_by("match_datetime")
+    )
+    resolved = resolve_user_bracket(request.user, tournament, knockout_matches)
+    home_team, away_team = resolved.get(match.id, (None, None))
+
+    valid_ids = {t.pk for t in [home_team, away_team] if t is not None}
+    if not valid_ids:
+        return JsonResponse({"ok": False, "error": "teams not resolved"}, status=400)
+    if winner_team_id not in valid_ids:
+        return JsonResponse({"ok": False, "error": "invalid team"}, status=400)
+
+    BracketPrediction.objects.update_or_create(
+        user=request.user,
+        tournament=tournament,
+        match=match,
+        defaults={"predicted_winner_id": winner_team_id},
+    )
+    return JsonResponse({"ok": True})
 
 
 @login_required

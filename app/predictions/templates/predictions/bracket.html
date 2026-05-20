@@ -134,6 +134,23 @@
         min-height: 26px;
     }
 
+    .bracket-slot--filled {
+        cursor: pointer;
+        transition: background 0.12s;
+    }
+
+    .bracket-slot--filled:hover {
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .bracket-slot--filled.winner {
+        background: rgba(74, 222, 128, 0.10);
+    }
+
+    .bracket-slot--filled.winner .bracket-team-name {
+        color: #4ade80;
+    }
+
     .bracket-flag {
         width: 18px;
         height: 18px;
@@ -221,10 +238,47 @@
         letter-spacing: 0.5px;
         word-break: break-word;
     }
+
+    /* ── Top toast ── */
+    .top-toast {
+        position: fixed;
+        top: 68px;
+        right: 20px;
+        z-index: 9999;
+        padding: 10px 18px;
+        border-radius: var(--radius-sm);
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        opacity: 0;
+        transform: translateY(-6px);
+        transition: opacity 0.2s, transform 0.2s;
+        pointer-events: none;
+    }
+
+    .top-toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .top-toast.success {
+        background: #1a3a2a;
+        border: 1px solid #2a6a4a;
+        color: #4ade80;
+    }
+
+    .top-toast.error {
+        background: #3a1a1a;
+        border: 1px solid #6a2a2a;
+        color: #eb5757;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
+<div id="top-toast" class="top-toast"></div>
+
 <div class="bracket-header">
     <h1 class="bracket-title">Bracket</h1>
 </div>
@@ -252,27 +306,40 @@
                 <div class="round-label">{{ round.label }}</div>
                 <div class="round-matches">
                     {% for item in round.matches %}
-                    <div class="bracket-match {% if item.home and item.away %}bracket-match--complete{% else %}bracket-match--incomplete{% endif %}">
+                    <div class="bracket-match {% if item.home and item.away %}bracket-match--complete{% else %}bracket-match--incomplete{% endif %}"
+                         data-match-id="{{ item.match.id }}">
                         {# Home slot #}
                         {% if item.home %}
                         {% flag_url item.home.code as hflag %}
-                        <div class="bracket-slot bracket-slot--filled">
+                        <div class="bracket-slot bracket-slot--filled{% if item.winner_id == item.home.id %} winner{% endif %}"
+                             data-slot="home"
+                             data-team-id="{{ item.home.id }}"
+                             data-team-name="{{ item.home.name }}"
+                             data-team-flag="{{ hflag }}">
                             {% if hflag %}<img class="bracket-flag" src="{{ hflag }}" alt="">{% endif %}
                             <span class="bracket-team-name">{{ item.home.name }}</span>
                         </div>
                         {% else %}
-                        <div class="bracket-slot bracket-slot--empty"></div>
+                        <div class="bracket-slot bracket-slot--empty"
+                             {% if item.home_source_match_id %}data-source-match-id="{{ item.home_source_match_id }}"{% endif %}>
+                        </div>
                         {% endif %}
                         <div class="bracket-vs">vs</div>
                         {# Away slot #}
                         {% if item.away %}
                         {% flag_url item.away.code as aflag %}
-                        <div class="bracket-slot bracket-slot--filled">
+                        <div class="bracket-slot bracket-slot--filled{% if item.winner_id == item.away.id %} winner{% endif %}"
+                             data-slot="away"
+                             data-team-id="{{ item.away.id }}"
+                             data-team-name="{{ item.away.name }}"
+                             data-team-flag="{{ aflag }}">
                             {% if aflag %}<img class="bracket-flag" src="{{ aflag }}" alt="">{% endif %}
                             <span class="bracket-team-name">{{ item.away.name }}</span>
                         </div>
                         {% else %}
-                        <div class="bracket-slot bracket-slot--empty"></div>
+                        <div class="bracket-slot bracket-slot--empty"
+                             {% if item.away_source_match_id %}data-source-match-id="{{ item.away_source_match_id }}"{% endif %}>
+                        </div>
                         {% endif %}
                     </div>
                     {% endfor %}
@@ -282,7 +349,7 @@
         </div>
     </div>
 
-    <div class="bracket-champion">
+    <div class="bracket-champion" {% if final_match %}data-source-match-id="{{ final_match.match.id }}"{% endif %}>
         <div class="champion-label">CAMPEÓN 🏆</div>
         {% if champion %}
         {% flag_url champion.code as cflag %}
@@ -296,5 +363,105 @@
     </div>
 
 </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if bracket_listo %}
+<script>
+const PREDICT_URL = "{% url 'bracket_predict' tournament.id %}";
+const CSRF = "{{ csrf_token }}";
+
+let _toastTimer = null;
+function showTopToast(msg, type) {
+    const el = document.getElementById('top-toast');
+    el.textContent = msg;
+    el.className = 'top-toast ' + type + ' show';
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+function post(matchId, winnerTeamId) {
+    return fetch(PREDICT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+        body: JSON.stringify({ match_id: matchId, winner_team_id: winnerTeamId }),
+    }).then(r => r.json());
+}
+
+function propagateWinner(matchId, teamId, teamName, teamFlag) {
+    // Find any empty slot that listens for the winner of matchId
+    const targets = document.querySelectorAll(`.bracket-slot--empty[data-source-match-id="${matchId}"]`);
+    targets.forEach(slot => {
+        slot.classList.remove('bracket-slot--empty');
+        slot.classList.add('bracket-slot--filled');
+        slot.removeAttribute('data-source-match-id');
+        slot.setAttribute('data-team-id', teamId);
+        slot.setAttribute('data-team-name', teamName);
+        slot.setAttribute('data-team-flag', teamFlag);
+        slot.innerHTML = teamFlag
+            ? `<img class="bracket-flag" src="${teamFlag}" alt=""><span class="bracket-team-name">${teamName}</span>`
+            : `<span class="bracket-team-name">${teamName}</span>`;
+
+        // Mark parent match as complete if both slots are now filled
+        const matchCard = slot.closest('.bracket-match');
+        if (matchCard) {
+            const slots = matchCard.querySelectorAll('.bracket-slot--filled');
+            if (slots.length === 2) {
+                matchCard.classList.remove('bracket-match--incomplete');
+                matchCard.classList.add('bracket-match--complete');
+            }
+        }
+    });
+
+    // Champion card
+    const champion = document.querySelector(`.bracket-champion[data-source-match-id="${matchId}"]`);
+    if (champion) {
+        champion.innerHTML = `
+            <div class="champion-label">CAMPEÓN 🏆</div>
+            <div class="champion-team">
+                ${teamFlag ? `<img class="champion-flag" src="${teamFlag}" alt="">` : ''}
+                <span class="champion-name">${teamName}</span>
+            </div>`;
+    }
+}
+
+document.addEventListener('click', function(e) {
+    const slot = e.target.closest('.bracket-slot--filled');
+    if (!slot) return;
+
+    const matchCard = slot.closest('.bracket-match');
+    if (!matchCard) return;
+
+    const matchId = parseInt(matchCard.dataset.matchId, 10);
+    const teamId  = parseInt(slot.dataset.teamId, 10);
+    const teamName = slot.dataset.teamName;
+    const teamFlag = slot.dataset.teamFlag || '';
+
+    // Find sibling slot to determine current winner state
+    const allSlots = matchCard.querySelectorAll('.bracket-slot--filled');
+    const alreadyWinner = slot.classList.contains('winner');
+
+    // Optimistic update: toggle winner
+    allSlots.forEach(s => s.classList.remove('winner'));
+    if (!alreadyWinner) {
+        slot.classList.add('winner');
+        propagateWinner(matchId, teamId, teamName, teamFlag);
+    }
+
+    const payload = alreadyWinner ? null : teamId;
+
+    post(matchId, payload).then(data => {
+        if (!data.ok) {
+            // Revert
+            allSlots.forEach(s => s.classList.remove('winner'));
+            showTopToast('Error al guardar', 'error');
+        }
+    }).catch(() => {
+        allSlots.forEach(s => s.classList.remove('winner'));
+        showTopToast('Error de conexión', 'error');
+    });
+});
+</script>
 {% endif %}
 {% endblock %}
