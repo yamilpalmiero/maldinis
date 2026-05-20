@@ -179,6 +179,7 @@ def mis_predicciones(request, tournament_id):
         "tournament":        tournament,
         "groups_data":       groups_data,
         "completed_groups":  completed_groups,
+        "grupos_guardados":  completed_groups == 12,
         "third_teams":       third_teams,
         "saved_entries":     saved_entries,
         "unranked_terceros": unranked_terceros,

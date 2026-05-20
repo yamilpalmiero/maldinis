@@ -314,6 +314,31 @@
     /* read-only terceros */
     .read-only .drag-handle { opacity: 0.2; cursor: default; }
 
+    /* ── Terceros empty state ── */
+    .terceros-empty-state {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 40px 24px;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .terceros-empty-icon {
+        display: block;
+        font-size: 28px;
+        margin-bottom: 12px;
+        line-height: 1;
+    }
+
+    .terceros-empty-state p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        max-width: 360px;
+        margin: 0 auto;
+    }
+
     /* ── Save groups button ── */
     .save-groups-row {
         display: flex;
@@ -434,16 +459,16 @@
         <span class="mp-section-meta">{{ third_teams|length }}/12 grupos con 3° elegido</span>
     </div>
 
-    {% if not terceros_complete %}
-    <div class="mp-notice">
-        Completá los 12 grupos eligiendo el 3° lugar de cada uno para poder rankear los mejores terceros.
+    {% if not grupos_guardados %}
+    <div class="terceros-empty-state">
+        <span class="terceros-empty-icon">📋</span>
+        <p>Guardá primero tus predicciones de grupos para rankear a los terceros.</p>
     </div>
-    {% endif %}
-
+    {% else %}
     <div class="terceros-layout">
         <div>
             <div class="terceros-col-label">Clasifican al bracket (1–8)</div>
-            <ul class="tercero-list {% if not terceros_complete %}read-only{% endif %}" id="terceros-ranked">
+            <ul class="tercero-list" id="terceros-ranked">
                 {% for entry in saved_entries %}
                 {% flag_url entry.team.code as tflag %}
                 <li class="tercero-item" data-id="{{ entry.team.id }}">
@@ -462,7 +487,7 @@
 
         <div>
             <div class="terceros-col-label dim">Sin clasificar / pool</div>
-            <ul class="tercero-list {% if not terceros_complete %}read-only{% endif %}" id="terceros-unranked">
+            <ul class="tercero-list" id="terceros-unranked">
                 {% for item in unranked_terceros %}
                 {% flag_url item.team.code as tflag %}
                 <li class="tercero-item" data-id="{{ item.team.id }}">
@@ -473,13 +498,12 @@
                     <span class="tercero-group-tag">{{ item.group }}</span>
                 </li>
                 {% empty %}
-                {% if terceros_complete %}
                 <li class="tercero-list-empty">Todos rankeados</li>
-                {% endif %}
                 {% endfor %}
             </ul>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <div id="toast" class="toast"></div>
