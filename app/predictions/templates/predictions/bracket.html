@@ -345,7 +345,8 @@
                              data-slot="home"
                              data-team-id="{{ item.home.id }}"
                              data-team-name="{{ item.home.name }}"
-                             data-team-flag="{{ hflag }}">
+                             data-team-flag="{{ hflag }}"
+                             {% if item.home_source_match_id %}data-source-match-id="{{ item.home_source_match_id }}"{% endif %}>
                             {% if hflag %}<img class="bracket-flag" src="{{ hflag }}" alt="">{% endif %}
                             <span class="bracket-team-name">{{ item.home.name }}</span>
                         </div>
@@ -362,7 +363,8 @@
                              data-slot="away"
                              data-team-id="{{ item.away.id }}"
                              data-team-name="{{ item.away.name }}"
-                             data-team-flag="{{ aflag }}">
+                             data-team-flag="{{ aflag }}"
+                             {% if item.away_source_match_id %}data-source-match-id="{{ item.away_source_match_id }}"{% endif %}>
                             {% if aflag %}<img class="bracket-flag" src="{{ aflag }}" alt="">{% endif %}
                             <span class="bracket-team-name">{{ item.away.name }}</span>
                         </div>
@@ -437,21 +439,28 @@ function post(matchId, winnerTeamId) {
 
 // ── Client-side propagation (optimistic) ─────────────────────────────────────
 function propagateWinner(matchId, teamId, teamName, teamFlag) {
-    document.querySelectorAll(`.bracket-slot--empty[data-source-match-id="${matchId}"]`).forEach(slot => {
-        slot.classList.remove('bracket-slot--empty');
-        slot.classList.add('bracket-slot--filled');
-        slot.removeAttribute('data-source-match-id');
+    // Selector agnóstico: actualiza tanto slots vacíos (primera selección)
+    // como slots ya rellenos (reemplazo de ganador).
+    // El atributo data-source-match-id se mantiene para permitir futuros reemplazos.
+    document.querySelectorAll(`.bracket-slot[data-source-match-id="${matchId}"]`).forEach(slot => {
+        const wasEmpty = slot.classList.contains('bracket-slot--empty');
+        if (wasEmpty) {
+            slot.classList.remove('bracket-slot--empty');
+            slot.classList.add('bracket-slot--filled');
+        }
         slot.setAttribute('data-team-id', teamId);
         slot.setAttribute('data-team-name', teamName);
-        slot.setAttribute('data-team-flag', teamFlag);
+        slot.setAttribute('data-team-flag', teamFlag || '');
         slot.innerHTML = teamFlag
             ? `<img class="bracket-flag" src="${teamFlag}" alt=""><span class="bracket-team-name">${teamName}</span>`
             : `<span class="bracket-team-name">${teamName}</span>`;
 
-        const matchCard = slot.closest('.bracket-match');
-        if (matchCard && matchCard.querySelectorAll('.bracket-slot--filled').length === 2) {
-            matchCard.classList.remove('bracket-match--incomplete');
-            matchCard.classList.add('bracket-match--complete');
+        if (wasEmpty) {
+            const matchCard = slot.closest('.bracket-match');
+            if (matchCard && matchCard.querySelectorAll('.bracket-slot--filled').length === 2) {
+                matchCard.classList.remove('bracket-match--incomplete');
+                matchCard.classList.add('bracket-match--complete');
+            }
         }
     });
 
@@ -464,6 +473,46 @@ function propagateWinner(matchId, teamId, teamName, teamFlag) {
                 <span class="champion-name">${teamName}</span>
             </div>`;
     }
+}
+
+// Guarda el estado actual de los slots aguas abajo de matchId para poder revertir.
+function _saveDownstream(matchId) {
+    const slots = Array.from(
+        document.querySelectorAll(`.bracket-slot[data-source-match-id="${matchId}"]`)
+    ).map(slot => ({
+        el:       slot,
+        wasEmpty: slot.classList.contains('bracket-slot--empty'),
+        teamId:   slot.getAttribute('data-team-id'),
+        teamName: slot.getAttribute('data-team-name'),
+        teamFlag: slot.getAttribute('data-team-flag'),
+        html:     slot.innerHTML,
+    }));
+    const championEl = document.querySelector(`.bracket-champion[data-source-match-id="${matchId}"]`);
+    return { slots, champion: championEl ? { el: championEl, html: championEl.innerHTML } : null };
+}
+
+// Restaura el estado guardado por _saveDownstream.
+function _restoreDownstream({ slots, champion }) {
+    slots.forEach(({ el: slot, wasEmpty, teamId, teamName, teamFlag, html }) => {
+        if (wasEmpty) {
+            slot.classList.remove('bracket-slot--filled');
+            slot.classList.add('bracket-slot--empty');
+            slot.removeAttribute('data-team-id');
+            slot.removeAttribute('data-team-name');
+            slot.removeAttribute('data-team-flag');
+            const matchCard = slot.closest('.bracket-match');
+            if (matchCard) {
+                matchCard.classList.remove('bracket-match--complete');
+                matchCard.classList.add('bracket-match--incomplete');
+            }
+        } else {
+            slot.setAttribute('data-team-id', teamId);
+            slot.setAttribute('data-team-name', teamName);
+            slot.setAttribute('data-team-flag', teamFlag || '');
+        }
+        slot.innerHTML = html;
+    });
+    if (champion) champion.el.innerHTML = champion.html;
 }
 
 function clearMatchPrediction(matchId) {
@@ -493,7 +542,11 @@ document.addEventListener('click', function(e) {
     const teamName = slot.dataset.teamName;
     const teamFlag = slot.dataset.teamFlag || '';
 
-    // Optimista: marcar ganador de inmediato
+    // Guardar estado previo para revertir si hay error
+    const oldWinnerSlot  = matchCard.querySelector('.bracket-slot--filled.winner') || null;
+    const savedDownstream = _saveDownstream(matchId);
+
+    // Optimista: marcar ganador y propagar aguas abajo
     const allSlots = matchCard.querySelectorAll('.bracket-slot--filled');
     allSlots.forEach(s => s.classList.remove('winner'));
     slot.classList.add('winner');
@@ -502,6 +555,8 @@ document.addEventListener('click', function(e) {
     post(matchId, teamId).then(data => {
         if (!data.ok) {
             allSlots.forEach(s => s.classList.remove('winner'));
+            if (oldWinnerSlot) oldWinnerSlot.classList.add('winner');
+            _restoreDownstream(savedDownstream);
             showTopToast('Error al guardar', 'error');
             return;
         }
@@ -510,6 +565,8 @@ document.addEventListener('click', function(e) {
         showCascadeToast(deleted.length);
     }).catch(() => {
         allSlots.forEach(s => s.classList.remove('winner'));
+        if (oldWinnerSlot) oldWinnerSlot.classList.add('winner');
+        _restoreDownstream(savedDownstream);
         showTopToast('Error de conexión', 'error');
     });
 });
