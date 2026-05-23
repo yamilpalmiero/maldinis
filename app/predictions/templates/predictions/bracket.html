@@ -103,7 +103,6 @@
 
     /* ── Match card ── */
     .bracket-match {
-        position: relative;
         background: var(--bg-card);
         border-radius: var(--radius-sm);
         padding: 5px;
@@ -118,37 +117,6 @@
 
     .bracket-match--incomplete {
         border: 1px dashed rgba(201, 162, 39, 0.22);
-    }
-
-    /* ── Botón X para limpiar predicción ── */
-    .match-clear-btn {
-        position: absolute;
-        top: 3px;
-        right: 3px;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        border: none;
-        background: transparent;
-        color: var(--text-muted);
-        font-size: 10px;
-        line-height: 1;
-        cursor: pointer;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        transition: background 0.12s, color 0.12s;
-        z-index: 1;
-    }
-
-    .match-clear-btn:hover {
-        background: rgba(255, 255, 255, 0.12);
-        color: var(--text-primary);
-    }
-
-    .bracket-match--has-winner:hover .match-clear-btn {
-        display: flex;
     }
 
     /* ── Slot ── */
@@ -368,9 +336,8 @@
                 <div class="round-label">{{ round.label }}</div>
                 <div class="round-matches">
                     {% for item in round.matches %}
-                    <div class="bracket-match {% if item.home and item.away %}bracket-match--complete{% else %}bracket-match--incomplete{% endif %}{% if item.winner_id %} bracket-match--has-winner{% endif %}"
+                    <div class="bracket-match {% if item.home and item.away %}bracket-match--complete{% else %}bracket-match--incomplete{% endif %}"
                          data-match-id="{{ item.match.id }}">
-                        <button class="match-clear-btn" title="Limpiar predicción" aria-label="Limpiar predicción">✕</button>
                         {# Home slot #}
                         {% if item.home %}
                         {% flag_url item.home.code as hflag %}
@@ -499,18 +466,10 @@ function propagateWinner(matchId, teamId, teamName, teamFlag) {
     }
 }
 
-function syncHasWinner(matchCard) {
-    matchCard.classList.toggle(
-        'bracket-match--has-winner',
-        !!matchCard.querySelector('.bracket-slot--filled.winner')
-    );
-}
-
 function clearMatchPrediction(matchId) {
     const matchCard = document.querySelector(`.bracket-match[data-match-id="${matchId}"]`);
     if (matchCard) {
         matchCard.querySelectorAll('.bracket-slot--filled.winner').forEach(s => s.classList.remove('winner'));
-        syncHasWinner(matchCard);
     }
     const champion = document.querySelector(`.bracket-champion[data-source-match-id="${matchId}"]`);
     if (champion) {
@@ -518,7 +477,7 @@ function clearMatchPrediction(matchId) {
     }
 }
 
-// ── Click izquierdo: seleccionar ganador ─────────────────────────────────────
+// ── Click: seleccionar o cambiar ganador ─────────────────────────────────────
 document.addEventListener('click', function(e) {
     const slot = e.target.closest('.bracket-slot--filled');
     if (!slot) return;
@@ -538,13 +497,11 @@ document.addEventListener('click', function(e) {
     const allSlots = matchCard.querySelectorAll('.bracket-slot--filled');
     allSlots.forEach(s => s.classList.remove('winner'));
     slot.classList.add('winner');
-    syncHasWinner(matchCard);
     propagateWinner(matchId, teamId, teamName, teamFlag);
 
     post(matchId, teamId).then(data => {
         if (!data.ok) {
             allSlots.forEach(s => s.classList.remove('winner'));
-            syncHasWinner(matchCard);
             showTopToast('Error al guardar', 'error');
             return;
         }
@@ -553,43 +510,6 @@ document.addEventListener('click', function(e) {
         showCascadeToast(deleted.length);
     }).catch(() => {
         allSlots.forEach(s => s.classList.remove('winner'));
-        syncHasWinner(matchCard);
-        showTopToast('Error de conexión', 'error');
-    });
-});
-
-// ── Botón X: limpiar ganador ─────────────────────────────────────────────────
-document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.match-clear-btn');
-    if (!btn) return;
-
-    e.stopPropagation();
-
-    const matchCard = btn.closest('.bracket-match');
-    if (!matchCard) return;
-
-    const winnerSlot = matchCard.querySelector('.bracket-slot--filled.winner');
-    if (!winnerSlot) return;
-
-    const matchId = parseInt(matchCard.dataset.matchId, 10);
-
-    // Optimista: quitar ganador de inmediato
-    winnerSlot.classList.remove('winner');
-    syncHasWinner(matchCard);
-
-    post(matchId, null).then(data => {
-        if (!data.ok) {
-            winnerSlot.classList.add('winner');
-            syncHasWinner(matchCard);
-            showTopToast('Error al guardar', 'error');
-            return;
-        }
-        const deleted = data.deleted || [];
-        deleted.forEach(mid => clearMatchPrediction(mid));
-        showCascadeToast(deleted.length);
-    }).catch(() => {
-        winnerSlot.classList.add('winner');
-        syncHasWinner(matchCard);
         showTopToast('Error de conexión', 'error');
     });
 });
