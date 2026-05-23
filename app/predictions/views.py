@@ -3,6 +3,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.conf import settings
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -31,6 +32,42 @@ def _source_match_id(source):
     if source.startswith("W") and source[1:].isdigit():
         return int(source[1:])
     return None
+
+
+def _compute_cascade_deletions(user, tournament, changed_match_id, old_winner_team_id):
+    """
+    Returns the list of match IDs whose BracketPrediction must be deleted because
+    they depended on old_winner_team_id advancing from changed_match_id.
+
+    Uses the home_source/away_source "W<id>" codes to walk the bracket tree.
+    Does not perform any deletions itself.
+    """
+    if old_winner_team_id is None:
+        return []
+
+    # Build dependency map: "W<match_id>" → [downstream match_id, ...]
+    dep_map: dict[str, list[int]] = {}
+    for m in Match.objects.filter(stage__in=_BRACKET_STAGES).only("id", "home_source", "away_source"):
+        for src in (m.home_source, m.away_source):
+            if src and src.startswith("W"):
+                dep_map.setdefault(src, []).append(m.id)
+
+    # Current predictions for this user+tournament (may already reflect the change)
+    user_preds: dict[int, int] = {
+        bp.match_id: bp.predicted_winner_id
+        for bp in BracketPrediction.objects.filter(user=user, tournament=tournament)
+    }
+
+    to_delete: list[int] = []
+
+    def _cascade(match_id: int, team_id: int) -> None:
+        for downstream_id in dep_map.get(f"W{match_id}", []):
+            if user_preds.get(downstream_id) == team_id:
+                to_delete.append(downstream_id)
+                _cascade(downstream_id, team_id)
+
+    _cascade(changed_match_id, old_winner_team_id)
+    return to_delete
 
 
 def _member_or_403(request, tournament):
@@ -161,16 +198,38 @@ def bracket_predict(request, tournament_id):
     except Match.DoesNotExist:
         return JsonResponse({"ok": False, "error": "invalid match"}, status=400)
 
+    # Capture old winner before any modifications (needed for cascade)
+    old_winner_id = BracketPrediction.objects.filter(
+        user=request.user, tournament=tournament, match=match
+    ).values_list("predicted_winner_id", flat=True).first()
+
     if winner_team_id is None:
-        BracketPrediction.objects.filter(
-            user=request.user, tournament=tournament, match=match
-        ).delete()
-        return JsonResponse({"ok": True})
+        # Clear action
+        with transaction.atomic():
+            BracketPrediction.objects.filter(
+                user=request.user, tournament=tournament, match=match
+            ).delete()
+            deleted_ids = _compute_cascade_deletions(
+                request.user, tournament, match_id, old_winner_id
+            )
+            if deleted_ids:
+                BracketPrediction.objects.filter(
+                    user=request.user, tournament=tournament, match_id__in=deleted_ids
+                ).delete()
+        return JsonResponse({"ok": True, "saved": None, "deleted": deleted_ids})
 
     try:
         winner_team_id = int(winner_team_id)
     except (TypeError, ValueError):
         return JsonResponse({"ok": False, "error": "invalid winner_team_id"}, status=400)
+
+    # Same winner re-sent: acknowledge without touching DB
+    if winner_team_id == old_winner_id:
+        return JsonResponse({
+            "ok": True,
+            "saved": {"match_id": match_id, "winner_team_id": winner_team_id},
+            "deleted": [],
+        })
 
     # Validate winner is one of the two teams resolved for this match
     knockout_matches = list(
@@ -187,13 +246,26 @@ def bracket_predict(request, tournament_id):
     if winner_team_id not in valid_ids:
         return JsonResponse({"ok": False, "error": "invalid team"}, status=400)
 
-    BracketPrediction.objects.update_or_create(
-        user=request.user,
-        tournament=tournament,
-        match=match,
-        defaults={"predicted_winner_id": winner_team_id},
-    )
-    return JsonResponse({"ok": True})
+    with transaction.atomic():
+        BracketPrediction.objects.update_or_create(
+            user=request.user,
+            tournament=tournament,
+            match=match,
+            defaults={"predicted_winner_id": winner_team_id},
+        )
+        deleted_ids = _compute_cascade_deletions(
+            request.user, tournament, match_id, old_winner_id
+        )
+        if deleted_ids:
+            BracketPrediction.objects.filter(
+                user=request.user, tournament=tournament, match_id__in=deleted_ids
+            ).delete()
+
+    return JsonResponse({
+        "ok": True,
+        "saved": {"match_id": match_id, "winner_team_id": winner_team_id},
+        "deleted": deleted_ids,
+    })
 
 
 @login_required

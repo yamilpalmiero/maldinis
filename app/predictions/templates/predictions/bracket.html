@@ -239,7 +239,7 @@
         word-break: break-word;
     }
 
-    /* ── Top toast ── */
+    /* ── Top toast (errores) ── */
     .top-toast {
         position: fixed;
         top: 68px;
@@ -273,11 +273,41 @@
         border: 1px solid #6a2a2a;
         color: #eb5757;
     }
+
+    /* ── Bottom toast (cascada) ── */
+    .bottom-toast {
+        position: fixed;
+        bottom: 24px;
+        right: 20px;
+        z-index: 9999;
+        padding: 10px 18px;
+        border-radius: var(--radius-sm);
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity 0.2s, transform 0.2s;
+        pointer-events: none;
+    }
+
+    .bottom-toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .bottom-toast.info {
+        background: #1a2a3a;
+        border: 1px solid #2a4a6a;
+        color: #7dd3fc;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div id="top-toast" class="top-toast"></div>
+<div id="bottom-toast" class="bottom-toast"></div>
 
 <div class="bracket-header">
     <h1 class="bracket-title">Bracket</h1>
@@ -372,15 +402,31 @@
 const PREDICT_URL = "{% url 'bracket_predict' tournament.id %}";
 const CSRF = "{{ csrf_token }}";
 
-let _toastTimer = null;
+// ── Toasts ───────────────────────────────────────────────────────────────────
+let _topToastTimer = null;
 function showTopToast(msg, type) {
     const el = document.getElementById('top-toast');
     el.textContent = msg;
     el.className = 'top-toast ' + type + ' show';
-    clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+    clearTimeout(_topToastTimer);
+    _topToastTimer = setTimeout(() => el.classList.remove('show'), 2600);
 }
 
+let _bottomToastTimer = null;
+function showBottomToast(msg) {
+    const el = document.getElementById('bottom-toast');
+    el.textContent = msg;
+    el.className = 'bottom-toast info show';
+    clearTimeout(_bottomToastTimer);
+    _bottomToastTimer = setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+function showCascadeToast(count) {
+    if (count === 0) return;
+    showBottomToast(count === 1 ? '1 predicción reiniciada' : `${count} predicciones reiniciadas`);
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
 function post(matchId, winnerTeamId) {
     return fetch(PREDICT_URL, {
         method: 'POST',
@@ -389,10 +435,9 @@ function post(matchId, winnerTeamId) {
     }).then(r => r.json());
 }
 
+// ── Client-side propagation (optimistic) ─────────────────────────────────────
 function propagateWinner(matchId, teamId, teamName, teamFlag) {
-    // Find any empty slot that listens for the winner of matchId
-    const targets = document.querySelectorAll(`.bracket-slot--empty[data-source-match-id="${matchId}"]`);
-    targets.forEach(slot => {
+    document.querySelectorAll(`.bracket-slot--empty[data-source-match-id="${matchId}"]`).forEach(slot => {
         slot.classList.remove('bracket-slot--empty');
         slot.classList.add('bracket-slot--filled');
         slot.removeAttribute('data-source-match-id');
@@ -403,18 +448,13 @@ function propagateWinner(matchId, teamId, teamName, teamFlag) {
             ? `<img class="bracket-flag" src="${teamFlag}" alt=""><span class="bracket-team-name">${teamName}</span>`
             : `<span class="bracket-team-name">${teamName}</span>`;
 
-        // Mark parent match as complete if both slots are now filled
         const matchCard = slot.closest('.bracket-match');
-        if (matchCard) {
-            const slots = matchCard.querySelectorAll('.bracket-slot--filled');
-            if (slots.length === 2) {
-                matchCard.classList.remove('bracket-match--incomplete');
-                matchCard.classList.add('bracket-match--complete');
-            }
+        if (matchCard && matchCard.querySelectorAll('.bracket-slot--filled').length === 2) {
+            matchCard.classList.remove('bracket-match--incomplete');
+            matchCard.classList.add('bracket-match--complete');
         }
     });
 
-    // Champion card
     const champion = document.querySelector(`.bracket-champion[data-source-match-id="${matchId}"]`);
     if (champion) {
         champion.innerHTML = `
@@ -426,6 +466,18 @@ function propagateWinner(matchId, teamId, teamName, teamFlag) {
     }
 }
 
+function clearMatchPrediction(matchId) {
+    const matchCard = document.querySelector(`.bracket-match[data-match-id="${matchId}"]`);
+    if (matchCard) {
+        matchCard.querySelectorAll('.bracket-slot--filled.winner').forEach(s => s.classList.remove('winner'));
+    }
+    const champion = document.querySelector(`.bracket-champion[data-source-match-id="${matchId}"]`);
+    if (champion) {
+        champion.innerHTML = `<div class="champion-label">CAMPEÓN 🏆</div><div class="champion-unknown">?</div>`;
+    }
+}
+
+// ── Click izquierdo: seleccionar ganador ─────────────────────────────────────
 document.addEventListener('click', function(e) {
     const slot = e.target.closest('.bracket-slot--filled');
     if (!slot) return;
@@ -433,32 +485,61 @@ document.addEventListener('click', function(e) {
     const matchCard = slot.closest('.bracket-match');
     if (!matchCard) return;
 
-    const matchId = parseInt(matchCard.dataset.matchId, 10);
-    const teamId  = parseInt(slot.dataset.teamId, 10);
+    // Ignorar click sobre el equipo ya seleccionado como ganador
+    if (slot.classList.contains('winner')) return;
+
+    const matchId  = parseInt(matchCard.dataset.matchId, 10);
+    const teamId   = parseInt(slot.dataset.teamId, 10);
     const teamName = slot.dataset.teamName;
     const teamFlag = slot.dataset.teamFlag || '';
 
-    // Find sibling slot to determine current winner state
+    // Optimista: marcar ganador de inmediato
     const allSlots = matchCard.querySelectorAll('.bracket-slot--filled');
-    const alreadyWinner = slot.classList.contains('winner');
-
-    // Optimistic update: toggle winner
     allSlots.forEach(s => s.classList.remove('winner'));
-    if (!alreadyWinner) {
-        slot.classList.add('winner');
-        propagateWinner(matchId, teamId, teamName, teamFlag);
-    }
+    slot.classList.add('winner');
+    propagateWinner(matchId, teamId, teamName, teamFlag);
 
-    const payload = alreadyWinner ? null : teamId;
-
-    post(matchId, payload).then(data => {
+    post(matchId, teamId).then(data => {
         if (!data.ok) {
-            // Revert
             allSlots.forEach(s => s.classList.remove('winner'));
             showTopToast('Error al guardar', 'error');
+            return;
         }
+        const deleted = data.deleted || [];
+        deleted.forEach(mid => clearMatchPrediction(mid));
+        showCascadeToast(deleted.length);
     }).catch(() => {
         allSlots.forEach(s => s.classList.remove('winner'));
+        showTopToast('Error de conexión', 'error');
+    });
+});
+
+// ── Click derecho: limpiar ganador ───────────────────────────────────────────
+document.addEventListener('contextmenu', function(e) {
+    const matchCard = e.target.closest('.bracket-match');
+    if (!matchCard) return;
+
+    const winnerSlot = matchCard.querySelector('.bracket-slot--filled.winner');
+    if (!winnerSlot) return;  // sin ganador seleccionado: menú nativo normal
+
+    e.preventDefault();
+
+    const matchId = parseInt(matchCard.dataset.matchId, 10);
+
+    // Optimista: quitar ganador de inmediato
+    winnerSlot.classList.remove('winner');
+
+    post(matchId, null).then(data => {
+        if (!data.ok) {
+            winnerSlot.classList.add('winner');  // revertir
+            showTopToast('Error al guardar', 'error');
+            return;
+        }
+        const deleted = data.deleted || [];
+        deleted.forEach(mid => clearMatchPrediction(mid));
+        showCascadeToast(deleted.length);
+    }).catch(() => {
+        winnerSlot.classList.add('winner');  // revertir
         showTopToast('Error de conexión', 'error');
     });
 });
