@@ -144,6 +144,17 @@
             padding: 32px 24px;
         }
 
+        /* ── Eyebrow de torneo activo ── */
+        .page-eyebrow {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--gold);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
         /* ── Título de sección ── */
         .section-title {
             font-family: 'Barlow Condensed', sans-serif;
@@ -345,9 +356,9 @@
         <div class="navbar-links">
             <a href="{% url 'mis_torneos' %}">Mis Torneos</a>
             {% if tournament %}
-            <a href="{% url 'bracket' tournament.id %}">Bracket</a>
-            <a href="{% url 'mis_predicciones' tournament.id %}">Mis predicciones</a>
-            <a href="{% url 'predicciones_especiales' tournament.id %}">Especiales</a>
+            <a href="{% url 'mis_predicciones' tournament.id %}">Grupos</a>
+            <a href="{% url 'bracket' tournament.id %}">Eliminatorias</a>
+            <a href="{% url 'predicciones_especiales' tournament.id %}">Trofeos</a>
             <a href="{% url 'ranking' tournament.id %}">Ranking</a>
             {% endif %}
         </div>

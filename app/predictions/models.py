@@ -152,6 +152,9 @@ class SpecialPrediction(models.Model):
     golden_boot = models.CharField(
         max_length=100, blank=True
     )  # Bota de Oro — nombre del jugador
+    golden_glove = models.CharField(
+        max_length=100, blank=True
+    )  # Guante de Oro — nombre del portero
 
     def __str__(self):
         return f"{self.user.username} — {self.tournament.name}"

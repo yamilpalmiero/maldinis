@@ -568,12 +568,17 @@ def predicciones_especiales(request, tournament_id):
     ).first()
 
     if request.method == "POST" and is_open:
-        golden_ball = request.POST.get("golden_ball", "").strip()
-        golden_boot = request.POST.get("golden_boot", "").strip()
+        golden_ball  = request.POST.get("golden_ball",  "").strip()
+        golden_boot  = request.POST.get("golden_boot",  "").strip()
+        golden_glove = request.POST.get("golden_glove", "").strip()
         SpecialPrediction.objects.update_or_create(
             user=request.user,
             tournament=tournament,
-            defaults={"golden_ball": golden_ball, "golden_boot": golden_boot},
+            defaults={
+                "golden_ball":  golden_ball,
+                "golden_boot":  golden_boot,
+                "golden_glove": golden_glove,
+            },
         )
         messages.success(request, "¡Predicciones especiales guardadas!")
         return redirect("predicciones_especiales", tournament_id=tournament_id)
