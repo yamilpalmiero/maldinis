@@ -56,49 +56,55 @@
         margin-bottom: 24px;
     }
 
-    /* ── Bracket layout ── */
-    .bracket-layout {
-        display: flex;
-        align-items: flex-start;
-        gap: 20px;
-        padding: 0 24px 32px;
-    }
-
-    .bracket-rounds-scroll {
-        flex: 1;
+    /* ── TV bracket layout ── */
+    .bracket-tv-wrapper {
         overflow-x: auto;
-        min-width: 0;
+        padding: 0 16px 32px;
         -webkit-overflow-scrolling: touch;
     }
 
-    .bracket-rounds {
+    .bracket-tv {
         display: flex;
-        gap: 16px;
+        align-items: flex-start;
+        gap: 8px;
         min-width: max-content;
     }
 
-    .bracket-round {
-        width: 200px;
+    .bracket-col {
+        width: 176px;
         flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
     }
 
-    .round-label {
+    .bracket-col--center {
+        width: 200px;
+    }
+
+    .col-header {
         font-family: 'Barlow Condensed', sans-serif;
         font-size: 11px;
         font-weight: 600;
         color: var(--gold);
         letter-spacing: 2px;
         text-transform: uppercase;
+        text-align: center;
         padding-bottom: 8px;
         border-bottom: 1px solid var(--border);
-        margin-bottom: 12px;
-        text-align: center;
     }
 
-    .round-matches {
+    .col-body {
+        height: 720px;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        justify-content: space-around;
+        padding: 4px 0;
+    }
+
+    .col-body--center {
+        justify-content: center;
+        gap: 16px;
+        align-items: center;
     }
 
     /* ── Match card ── */
@@ -187,14 +193,13 @@
 
     /* ── Champion card ── */
     .bracket-champion {
-        flex-shrink: 0;
+        width: 100%;
         background: var(--bg-card);
         border: 1px solid rgba(201, 162, 39, 0.28);
         border-radius: 12px;
         padding: 20px 24px;
         text-align: center;
-        min-width: 150px;
-        max-width: 180px;
+        box-sizing: border-box;
     }
 
     .champion-label {
@@ -327,73 +332,102 @@
     <a href="{% url 'mis_predicciones' tournament.id %}" class="btn-primary">Ir a mis predicciones</a>
 </div>
 {% else %}
-<div class="bracket-layout">
+<div class="bracket-tv-wrapper">
+    <div class="bracket-tv">
 
-    <div class="bracket-rounds-scroll">
-        <div class="bracket-rounds">
-            {% for round in rondas_list %}
-            <div class="bracket-round">
-                <div class="round-label">{{ round.label }}</div>
-                <div class="round-matches">
-                    {% for item in round.matches %}
-                    <div class="bracket-match {% if item.home and item.away %}bracket-match--complete{% else %}bracket-match--incomplete{% endif %}"
-                         data-match-id="{{ item.match.id }}">
-                        {# Home slot #}
-                        {% if item.home %}
-                        {% flag_url item.home.code as hflag %}
-                        <div class="bracket-slot bracket-slot--filled{% if item.winner_id == item.home.id %} winner{% endif %}"
-                             data-slot="home"
-                             data-team-id="{{ item.home.id }}"
-                             data-team-name="{{ item.home.name }}"
-                             data-team-flag="{{ hflag }}"
-                             {% if item.home_source_match_id %}data-source-match-id="{{ item.home_source_match_id }}"{% endif %}>
-                            {% if hflag %}<img class="bracket-flag" src="{{ hflag }}" alt="">{% endif %}
-                            <span class="bracket-team-name">{{ item.home.name }}</span>
-                        </div>
-                        {% else %}
-                        <div class="bracket-slot bracket-slot--empty"
-                             {% if item.home_source_match_id %}data-source-match-id="{{ item.home_source_match_id }}"{% endif %}>
-                        </div>
-                        {% endif %}
-                        <div class="bracket-vs">vs</div>
-                        {# Away slot #}
-                        {% if item.away %}
-                        {% flag_url item.away.code as aflag %}
-                        <div class="bracket-slot bracket-slot--filled{% if item.winner_id == item.away.id %} winner{% endif %}"
-                             data-slot="away"
-                             data-team-id="{{ item.away.id }}"
-                             data-team-name="{{ item.away.name }}"
-                             data-team-flag="{{ aflag }}"
-                             {% if item.away_source_match_id %}data-source-match-id="{{ item.away_source_match_id }}"{% endif %}>
-                            {% if aflag %}<img class="bracket-flag" src="{{ aflag }}" alt="">{% endif %}
-                            <span class="bracket-team-name">{{ item.away.name }}</span>
-                        </div>
-                        {% else %}
-                        <div class="bracket-slot bracket-slot--empty"
-                             {% if item.away_source_match_id %}data-source-match-id="{{ item.away_source_match_id }}"{% endif %}>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
+        {# ── Left: R32 → R16 → QF → SF ── #}
+        <div class="bracket-col">
+            <div class="col-header">16avos</div>
+            <div class="col-body">
+                {% for item in bracket_left.r32 %}
+                {% include "predictions/_bracket_match_card.html" %}
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
-    </div>
-
-    <div class="bracket-champion" {% if final_match %}data-source-match-id="{{ final_match.match.id }}"{% endif %}>
-        <div class="champion-label">CAMPEÓN 🏆</div>
-        {% if champion %}
-        {% flag_url champion.code as cflag %}
-        <div class="champion-team">
-            {% if cflag %}<img class="champion-flag" src="{{ cflag }}" alt="">{% endif %}
-            <span class="champion-name">{{ champion.name }}</span>
+        <div class="bracket-col">
+            <div class="col-header">Octavos</div>
+            <div class="col-body">
+                {% for item in bracket_left.r16 %}
+                {% include "predictions/_bracket_match_card.html" %}
+                {% endfor %}
+            </div>
         </div>
-        {% else %}
-        <div class="champion-unknown">?</div>
-        {% endif %}
-    </div>
+        <div class="bracket-col">
+            <div class="col-header">Cuartos</div>
+            <div class="col-body">
+                {% for item in bracket_left.qf %}
+                {% include "predictions/_bracket_match_card.html" %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="bracket-col">
+            <div class="col-header">Semis</div>
+            <div class="col-body">
+                {% for item in bracket_left.sf %}
+                {% include "predictions/_bracket_match_card.html" %}
+                {% endfor %}
+            </div>
+        </div>
 
+        {# ── Center: campeón + final ── #}
+        <div class="bracket-col bracket-col--center">
+            <div class="col-header">Final</div>
+            <div class="col-body col-body--center">
+                <div class="bracket-champion" {% if final_match %}data-source-match-id="{{ final_match.match.id }}"{% endif %}>
+                    <div class="champion-label">CAMPEÓN 🏆</div>
+                    {% if champion %}
+                    {% flag_url champion.code as cflag %}
+                    <div class="champion-team">
+                        {% if cflag %}<img class="champion-flag" src="{{ cflag }}" alt="">{% endif %}
+                        <span class="champion-name">{{ champion.name }}</span>
+                    </div>
+                    {% else %}
+                    <div class="champion-unknown">?</div>
+                    {% endif %}
+                </div>
+                {% if final_match %}
+                {% with item=final_match %}
+                {% include "predictions/_bracket_match_card.html" %}
+                {% endwith %}
+                {% endif %}
+            </div>
+        </div>
+
+        {# ── Right: SF → QF → R16 → R32 ── #}
+        <div class="bracket-col">
+            <div class="col-header">Semis</div>
+            <div class="col-body">
+                {% for item in bracket_right.sf %}
+                {% include "predictions/_bracket_match_card.html" %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="bracket-col">
+            <div class="col-header">Cuartos</div>
+            <div class="col-body">
+                {% for item in bracket_right.qf %}
+                {% include "predictions/_bracket_match_card.html" %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="bracket-col">
+            <div class="col-header">Octavos</div>
+            <div class="col-body">
+                {% for item in bracket_right.r16 %}
+                {% include "predictions/_bracket_match_card.html" %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="bracket-col">
+            <div class="col-header">16avos</div>
+            <div class="col-body">
+                {% for item in bracket_right.r32 %}
+                {% include "predictions/_bracket_match_card.html" %}
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
 </div>
 {% endif %}
 {% endblock %}
@@ -439,9 +473,6 @@ function post(matchId, winnerTeamId) {
 
 // ── Client-side propagation (optimistic) ─────────────────────────────────────
 function propagateWinner(matchId, teamId, teamName, teamFlag) {
-    // Selector agnóstico: actualiza tanto slots vacíos (primera selección)
-    // como slots ya rellenos (reemplazo de ganador).
-    // El atributo data-source-match-id se mantiene para permitir futuros reemplazos.
     document.querySelectorAll(`.bracket-slot[data-source-match-id="${matchId}"]`).forEach(slot => {
         const wasEmpty = slot.classList.contains('bracket-slot--empty');
         if (wasEmpty) {
@@ -475,7 +506,6 @@ function propagateWinner(matchId, teamId, teamName, teamFlag) {
     }
 }
 
-// Guarda el estado actual de los slots aguas abajo de matchId para poder revertir.
 function _saveDownstream(matchId) {
     const slots = Array.from(
         document.querySelectorAll(`.bracket-slot[data-source-match-id="${matchId}"]`)
@@ -491,7 +521,6 @@ function _saveDownstream(matchId) {
     return { slots, champion: championEl ? { el: championEl, html: championEl.innerHTML } : null };
 }
 
-// Restaura el estado guardado por _saveDownstream.
 function _restoreDownstream({ slots, champion }) {
     slots.forEach(({ el: slot, wasEmpty, teamId, teamName, teamFlag, html }) => {
         if (wasEmpty) {
@@ -534,7 +563,6 @@ document.addEventListener('click', function(e) {
     const matchCard = slot.closest('.bracket-match');
     if (!matchCard) return;
 
-    // Ignorar click sobre el equipo ya seleccionado como ganador
     if (slot.classList.contains('winner')) return;
 
     const matchId  = parseInt(matchCard.dataset.matchId, 10);
@@ -542,11 +570,9 @@ document.addEventListener('click', function(e) {
     const teamName = slot.dataset.teamName;
     const teamFlag = slot.dataset.teamFlag || '';
 
-    // Guardar estado previo para revertir si hay error
-    const oldWinnerSlot  = matchCard.querySelector('.bracket-slot--filled.winner') || null;
+    const oldWinnerSlot   = matchCard.querySelector('.bracket-slot--filled.winner') || null;
     const savedDownstream = _saveDownstream(matchId);
 
-    // Optimista: marcar ganador y propagar aguas abajo
     const allSlots = matchCard.querySelectorAll('.bracket-slot--filled');
     allSlots.forEach(s => s.classList.remove('winner'));
     slot.classList.add('winner');

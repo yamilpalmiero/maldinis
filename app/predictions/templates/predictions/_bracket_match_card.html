@@ -1,0 +1,35 @@
+{% load flag_tags %}
+<div class="bracket-match {% if item.home and item.away %}bracket-match--complete{% else %}bracket-match--incomplete{% endif %}"
+     data-match-id="{{ item.match.id }}">
+    {% if item.home %}
+    {% flag_url item.home.code as hflag %}
+    <div class="bracket-slot bracket-slot--filled{% if item.winner_id == item.home.id %} winner{% endif %}"
+         data-slot="home"
+         data-team-id="{{ item.home.id }}"
+         data-team-name="{{ item.home.name }}"
+         data-team-flag="{{ hflag }}"
+         {% if item.home_source_match_id %}data-source-match-id="{{ item.home_source_match_id }}"{% endif %}>
+        {% if hflag %}<img class="bracket-flag" src="{{ hflag }}" alt="">{% endif %}
+        <span class="bracket-team-name">{{ item.home.name }}</span>
+    </div>
+    {% else %}
+    <div class="bracket-slot bracket-slot--empty"
+         {% if item.home_source_match_id %}data-source-match-id="{{ item.home_source_match_id }}"{% endif %}></div>
+    {% endif %}
+    <div class="bracket-vs">vs</div>
+    {% if item.away %}
+    {% flag_url item.away.code as aflag %}
+    <div class="bracket-slot bracket-slot--filled{% if item.winner_id == item.away.id %} winner{% endif %}"
+         data-slot="away"
+         data-team-id="{{ item.away.id }}"
+         data-team-name="{{ item.away.name }}"
+         data-team-flag="{{ aflag }}"
+         {% if item.away_source_match_id %}data-source-match-id="{{ item.away_source_match_id }}"{% endif %}>
+        {% if aflag %}<img class="bracket-flag" src="{{ aflag }}" alt="">{% endif %}
+        <span class="bracket-team-name">{{ item.away.name }}</span>
+    </div>
+    {% else %}
+    <div class="bracket-slot bracket-slot--empty"
+         {% if item.away_source_match_id %}data-source-match-id="{{ item.away_source_match_id }}"{% endif %}></div>
+    {% endif %}
+</div>

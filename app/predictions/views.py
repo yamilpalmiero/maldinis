@@ -70,6 +70,62 @@ def _compute_cascade_deletions(user, tournament, changed_match_id, old_winner_te
     return to_delete
 
 
+def _build_bracket_halves(all_match_items):
+    """
+    Split knockout match items into left/right halves based on the Final's
+    home/away source branches. Returns (left, right, final_item).
+
+    left/right are dicts with keys "sf", "qf", "r16", "r32", each a list of
+    items in DFS pre-order (home branch before away branch) — which produces
+    the correct top-to-bottom display order for a TV bracket.
+    Returns (None, None, None) if no Final is found.
+    """
+    by_id = {item["match"].id: item for item in all_match_items}
+
+    final_item = next(
+        (item for item in all_match_items if item["match"].stage == Match.Stage.FINAL),
+        None,
+    )
+    if not final_item:
+        return None, None, None
+
+    left_root  = _source_match_id(final_item["match"].home_source)
+    right_root = _source_match_id(final_item["match"].away_source)
+
+    def _collect(root_id):
+        groups: dict = {}
+
+        def _walk(mid):
+            item = by_id.get(mid)
+            if item is None:
+                return
+            groups.setdefault(item["match"].stage, []).append(item)
+            h = _source_match_id(item["match"].home_source)
+            a = _source_match_id(item["match"].away_source)
+            if h:
+                _walk(h)
+            if a:
+                _walk(a)
+
+        if root_id:
+            _walk(root_id)
+        return groups
+
+    def _to_half(groups):
+        return {
+            "sf":  groups.get(Match.Stage.SEMI_FINAL,    []),
+            "qf":  groups.get(Match.Stage.QUARTER_FINAL, []),
+            "r16": groups.get(Match.Stage.ROUND_OF_16,   []),
+            "r32": groups.get(Match.Stage.ROUND_OF_32,   []),
+        }
+
+    return (
+        _to_half(_collect(left_root)),
+        _to_half(_collect(right_root)),
+        final_item,
+    )
+
+
 def _member_or_403(request, tournament):
     return TournamentMember.objects.filter(
         tournament=tournament, user=request.user
@@ -114,8 +170,7 @@ def bracket(request, tournament_id):
     ).exists()
     bracket_listo = grupos_guardados and terceros_guardados
 
-    rondas = None
-    final_match = None
+    bracket_left = bracket_right = final_match = champion = None
 
     if bracket_listo:
         knockout_matches = list(
@@ -133,10 +188,10 @@ def bracket(request, tournament_id):
             )
         }
 
-        matches_by_stage = {stage: [] for stage in _BRACKET_STAGES}
+        all_items = []
         for match in knockout_matches:
             home, away = resolved.get(match.id, (None, None))
-            matches_by_stage[match.stage].append({
+            all_items.append({
                 "match":                match,
                 "home":                 home,
                 "away":                 away,
@@ -145,17 +200,8 @@ def bracket(request, tournament_id):
                 "winner_id":            winner_map.get(match.id),
             })
 
-        rondas_list = [
-            {"label": "16avos",  "matches": matches_by_stage[Match.Stage.ROUND_OF_32]},
-            {"label": "Octavos", "matches": matches_by_stage[Match.Stage.ROUND_OF_16]},
-            {"label": "Cuartos", "matches": matches_by_stage[Match.Stage.QUARTER_FINAL]},
-            {"label": "Semis",   "matches": matches_by_stage[Match.Stage.SEMI_FINAL]},
-            {"label": "Final",   "matches": matches_by_stage[Match.Stage.FINAL]},
-        ]
-        final_matches = matches_by_stage[Match.Stage.FINAL]
-        final_match = final_matches[0] if final_matches else None
+        bracket_left, bracket_right, final_match = _build_bracket_halves(all_items)
 
-        champion = None
         if final_match:
             bp = BracketPrediction.objects.filter(
                 user=request.user, tournament=tournament, match=final_match["match"]
@@ -167,9 +213,10 @@ def bracket(request, tournament_id):
         "grupos_guardados":   grupos_guardados,
         "terceros_guardados": terceros_guardados,
         "bracket_listo":      bracket_listo,
-        "rondas_list":        rondas_list if bracket_listo else None,
-        "final_match":        final_match if bracket_listo else None,
-        "champion":           champion if bracket_listo else None,
+        "bracket_left":       bracket_left,
+        "bracket_right":      bracket_right,
+        "final_match":        final_match,
+        "champion":           champion,
     })
 
 
