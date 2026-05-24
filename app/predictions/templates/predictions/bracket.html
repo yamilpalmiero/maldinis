@@ -107,6 +107,11 @@
         align-items: center;
     }
 
+    /* Final match card must match the side-column width (align-items:center shrinks it otherwise) */
+    .col-body--center .bracket-match {
+        width: 176px;
+    }
+
     /* ── Match card ── */
     .bracket-match {
         background: var(--bg-card);
