@@ -93,6 +93,26 @@
         white-space: nowrap;
     }
 
+    .rank-breakdown {
+        font-family: 'Barlow Condensed', sans-serif;
+        font-size: 13px;
+        color: var(--text-muted);
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .rank-breakdown .pts-label {
+        font-size: 10px;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        opacity: 0.6;
+        margin-right: 2px;
+    }
+
+    @media (max-width: 600px) {
+        .col-breakdown { display: none; }
+    }
+
     .ranking-row.is-me { background: var(--gold-subtle); }
     .ranking-row.is-me:hover { background: var(--gold-subtle); }
 
@@ -169,7 +189,10 @@
             <th>#</th>
             <th class="avatar-cell"></th>
             <th>Jugador</th>
-            <th class="right">Puntos</th>
+            <th class="right col-breakdown">Grupos</th>
+            <th class="right col-breakdown">Terceros</th>
+            <th class="right col-breakdown">Bracket</th>
+            <th class="right">Total</th>
         </tr>
     </thead>
     <tbody>
@@ -185,7 +208,10 @@
                 <span style="font-size:11px; color: var(--gold); margin-left: 6px;">tú</span>
                 {% endif %}
             </td>
-            <td class="rank-pts">{{ item.points }} pts</td>
+            <td class="rank-breakdown col-breakdown">{{ item.score.groups }}</td>
+            <td class="rank-breakdown col-breakdown">{{ item.score.thirds }}</td>
+            <td class="rank-breakdown col-breakdown">{{ item.score.bracket }}</td>
+            <td class="rank-pts">{{ item.score.total }} pts</td>
         </tr>
         {% endfor %}
     </tbody>

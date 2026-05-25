@@ -15,7 +15,7 @@ from .models import (
 )
 from tournaments.models import Tournament, TournamentMember
 from .services.bracket_resolver import resolve_user_bracket
-from .services.scoring import compute_user_points
+from .services.scoring import compute_user_score
 
 _GROUPS = list("ABCDEFGHIJKL")
 
@@ -536,15 +536,14 @@ def ranking(request, tournament_id):
     entries = [
         {
             "user":     m.user,
-            "points":   compute_user_points(m.user, tournament),
+            "score":    compute_user_score(m.user, tournament),
             "initials": m.user.username[:2].upper(),
         }
         for m in members
     ]
-    entries.sort(key=lambda x: x["points"], reverse=True)
+    entries.sort(key=lambda x: x["score"]["total"], reverse=True)
     for i, item in enumerate(entries, start=1):
         item["position"] = i
-        item["medal"] = ""
 
     special_predictions = SpecialPrediction.objects.filter(
         tournament=tournament, user__in=[m.user for m in members]

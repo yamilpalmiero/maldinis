@@ -169,10 +169,10 @@ class ResolveUserBracketTest(TestCase):
         self.assertIsNone(away)
 
     # 8. Cadena completa: group preds → R32 → W codes en R16 resuelve bien
-    #    También verifica exactamente 2 queries.
-    def test_8_full_chain_and_two_queries(self):
+    #    También verifica exactamente 3 queries (group_preds, bracket_preds, third_ranking).
+    def test_8_full_chain_and_three_queries(self):
         matches = [self.m_r32_a, self.m_r32_b, self.m_r16]
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             result = resolve_user_bracket(self.user, self.tournament, matches)
         self.assertEqual(result[self.m_r32_a.id], (self.t_arg, None))
         self.assertEqual(result[self.m_r32_b.id], (self.t_bra, self.t_fra))
