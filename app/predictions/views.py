@@ -15,6 +15,7 @@ from .models import (
 )
 from tournaments.models import Tournament, TournamentMember
 from .services.bracket_resolver import resolve_user_bracket
+from .services.scoring import compute_user_points
 
 _GROUPS = list("ABCDEFGHIJKL")
 
@@ -528,26 +529,30 @@ def ranking(request, tournament_id):
         messages.error(request, "No eres miembro de este torneo.")
         return redirect("mis_torneos")
 
-    members = TournamentMember.objects.filter(tournament=tournament).select_related("user")
+    members = list(
+        TournamentMember.objects.filter(tournament=tournament).select_related("user")
+    )
 
-    ranking_list = []
-    for i, member in enumerate(members, start=1):
-        ranking_list.append({
-            "user":     member.user,
-            "points":   0,
-            "position": i,
-            "medal":    "",
-            "initials": member.user.username[:2].upper(),
-        })
+    entries = [
+        {
+            "user":     m.user,
+            "points":   compute_user_points(m.user, tournament),
+            "initials": m.user.username[:2].upper(),
+        }
+        for m in members
+    ]
+    entries.sort(key=lambda x: x["points"], reverse=True)
+    for i, item in enumerate(entries, start=1):
+        item["position"] = i
+        item["medal"] = ""
 
     special_predictions = SpecialPrediction.objects.filter(
         tournament=tournament, user__in=[m.user for m in members]
     ).select_related("user")
 
     return render(request, "predictions/ranking.html", {
-        "tournament":        tournament,
-        "ranking_list":      ranking_list,
-        "most_exact_users":  [],
+        "tournament":          tournament,
+        "ranking_list":        entries,
         "special_predictions": special_predictions,
     })
 

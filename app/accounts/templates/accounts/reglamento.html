@@ -8,49 +8,130 @@
         Reglamento
     </h1>
     <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 28px;">
-        Cómo funciona Maldinis.
+        Cómo se puntúan las predicciones en Maldinis.
     </p>
 
-    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 20px;">
-        <h2 class="section-title">Puntuación de partidos</h2>
-        <ul class="rules-list" style="margin-bottom: 24px;">
+    <!-- GRUPOS -->
+    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 16px;">
+        <h2 class="section-title">Fase de grupos</h2>
+        <ul class="rules-list">
             <li>
-                <span>Resultado exacto</span>
+                <span>Acertar el 1º del grupo</span>
+                <span class="rule-points">5 pts</span>
+            </li>
+            <li>
+                <span>Acertar el 2º del grupo</span>
                 <span class="rule-points">3 pts</span>
             </li>
             <li>
-                <span>Acertar solo el ganador (o empate)</span>
-                <span class="rule-points">1 pt</span>
+                <span>Acertar el 3º del grupo</span>
+                <span class="rule-points">2 pts</span>
             </li>
             <li>
-                <span>No predecir o fallar</span>
-                <span class="rule-points">0 pts</span>
-            </li>
-        </ul>
-
-        <h2 class="section-title">Predicciones especiales</h2>
-        <ul class="rules-list">
-            <li>
-                <span>Acertar el Balón de Oro</span>
-                <span class="rule-points">10 pts</span>
-            </li>
-            <li>
-                <span>Acertar la Bota de Oro</span>
-                <span class="rule-points">5 pts</span>
+                <span style="color: var(--text-muted); font-size: 13px;">Máximo en grupos (12 grupos × 10 pts)</span>
+                <span class="rule-points" style="color: var(--text-secondary);">120 pts</span>
             </li>
         </ul>
     </div>
 
-    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 20px;">
+    <!-- TERCEROS -->
+    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 16px;">
+        <h2 class="section-title">Terceros clasificados</h2>
+        <ul class="rules-list">
+            <li>
+                <span>Acertar que un país está entre los 8 mejores terceros</span>
+                <span class="rule-points">2 pts</span>
+            </li>
+            <li>
+                <span>Bonus: posición exacta en el ranking de terceros</span>
+                <span class="rule-points">+1 pt</span>
+            </li>
+            <li>
+                <span style="color: var(--text-muted); font-size: 13px;">Máximo en terceros (8 slots × 3 pts)</span>
+                <span class="rule-points" style="color: var(--text-secondary);">24 pts</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- BRACKET -->
+    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 16px;">
+        <h2 class="section-title">Eliminatorias (bracket)</h2>
+        <ul class="rules-list">
+            <li>
+                <span>Ganador en 16avos de final</span>
+                <span class="rule-points">2 pts c/u</span>
+            </li>
+            <li>
+                <span>Ganador en Octavos de final</span>
+                <span class="rule-points">4 pts c/u</span>
+            </li>
+            <li>
+                <span>Ganador en Cuartos de final</span>
+                <span class="rule-points">8 pts c/u</span>
+            </li>
+            <li>
+                <span>Ganador en Semifinales</span>
+                <span class="rule-points">16 pts c/u</span>
+            </li>
+            <li>
+                <span>Campeón del Mundial</span>
+                <span class="rule-points">42 pts</span>
+            </li>
+            <li>
+                <span style="color: var(--text-muted); font-size: 13px;">Máximo en bracket</span>
+                <span class="rule-points" style="color: var(--text-secondary);">170 pts</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- TROFEOS -->
+    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 16px;">
+        <h2 class="section-title">Trofeos individuales</h2>
+        <ul class="rules-list">
+            <li>
+                <span>🏆 Balón de Oro</span>
+                <span class="rule-points">15 pts</span>
+            </li>
+            <li>
+                <span>👟 Bota de Oro</span>
+                <span class="rule-points">10 pts</span>
+            </li>
+            <li>
+                <span>🧤 Guante de Oro</span>
+                <span class="rule-points">5 pts</span>
+            </li>
+            <li>
+                <span style="color: var(--text-muted); font-size: 13px;">Máximo en trofeos</span>
+                <span class="rule-points" style="color: var(--text-secondary);">30 pts</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- TOTAL -->
+    <div style="background: var(--bg-card); border: 0.5px solid var(--border-gold); border-radius: var(--radius); padding: 28px; margin-bottom: 16px;">
+        <h2 class="section-title">Total máximo posible</h2>
+        <ul class="rules-list">
+            <li>
+                <span style="font-size: 15px; font-weight: 500;">Grupos + Terceros + Bracket + Trofeos</span>
+                <span class="rule-points" style="font-size: 20px;">344 pts</span>
+            </li>
+        </ul>
+        <p style="color: var(--text-muted); font-size: 13px; margin-top: 16px; line-height: 1.6;">
+            El bracket pesa casi la mitad del total (170 pts), y los puntos se duplican cada ronda. Eso hace posible remontar hasta el final del torneo: alguien que acierta el campeón gana más en un solo partido que en toda la fase de grupos.
+        </p>
+    </div>
+
+    <!-- PLAZOS -->
+    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px;">
         <h2 class="section-title">Plazos</h2>
         <ul class="rules-list">
             <li>
-                <span>Fixture</span>
-                <span style="color: var(--text-secondary); font-size: 13px; text-align: right;">Cada partido cierra al comenzar</span>
+                <span>Predicciones de grupos</span>
+                <span style="color: var(--text-secondary); font-size: 13px; text-align: right;">Cierran al inicio del primer partido del Mundial</span>
             </li>
             <li>
-                <span>Predicciones especiales</span>
-                <span style="color: var(--text-secondary); font-size: 13px; text-align: right;">Hasta el inicio de la fase eliminatoria</span>
+                <span>Bracket y trofeos</span>
+                <span style="color: var(--text-secondary); font-size: 13px; text-align: right;">Cierran al inicio de la fase eliminatoria</span>
             </li>
         </ul>
         <p style="color: var(--text-muted); font-size: 13px; margin-top: 16px;">
@@ -58,11 +139,5 @@
         </p>
     </div>
 
-    <div style="background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px;">
-        <h2 class="section-title">Desempate en el ranking</h2>
-        <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6;">
-            Si dos o más participantes terminan con los mismos puntos, gana quien haya acertado más resultados exactos (3 pts).
-        </p>
-    </div>
 </div>
 {% endblock %}
