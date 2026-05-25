@@ -161,3 +161,31 @@ class SpecialPrediction(models.Model):
 
     class Meta:
         unique_together = ["user", "tournament"]
+
+
+class Player(models.Model):
+    class Position(models.TextChoices):
+        GOALKEEPER = "GK",  "Portero"
+        DEFENDER   = "DEF", "Defensor"
+        MIDFIELDER = "MID", "Mediocampista"
+        FORWARD    = "FWD", "Delantero"
+
+    name          = models.CharField(max_length=150)
+    team          = models.ForeignKey(Team, on_delete=models.CASCADE, related_name="players")
+    position      = models.CharField(max_length=3, choices=Position.choices, blank=True)
+    external_id   = models.IntegerField(
+        unique=True, null=True, blank=True,
+        help_text="ID del jugador en Football-Data.org",
+    )
+    shirt_number  = models.IntegerField(null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    photo_url     = models.URLField(blank=True)
+    is_active     = models.BooleanField(
+        default=True, help_text="Marcar False si el jugador ya no está en el plantel activo",
+    )
+
+    def __str__(self):
+        return f"{self.name} ({self.team.code})"
+
+    class Meta:
+        ordering = ["team__name", "position", "name"]

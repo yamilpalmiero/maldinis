@@ -1,5 +1,9 @@
 from django.contrib import admin
-from .models import Team, Match, GroupPrediction, ThirdPlaceRanking, ThirdPlaceRankingEntry, BracketPrediction, SpecialPrediction
+from .models import (
+    Team, Match, Player,
+    GroupPrediction, ThirdPlaceRanking, ThirdPlaceRankingEntry,
+    BracketPrediction, SpecialPrediction,
+)
 
 
 @admin.register(Team)
@@ -50,6 +54,15 @@ class BracketPredictionAdmin(admin.ModelAdmin):
 
 @admin.register(SpecialPrediction)
 class SpecialPredictionAdmin(admin.ModelAdmin):
-    list_display = ['user', 'tournament', 'golden_ball', 'golden_boot']
+    list_display = ['user', 'tournament', 'golden_ball', 'golden_boot', 'golden_glove']
     list_filter = ['tournament']
-    search_fields = ['user__username', 'golden_ball', 'golden_boot']
+    search_fields = ['user__username', 'golden_ball', 'golden_boot', 'golden_glove']
+
+
+@admin.register(Player)
+class PlayerAdmin(admin.ModelAdmin):
+    list_display  = ['name', 'team', 'position', 'shirt_number', 'is_active', 'external_id']
+    list_filter   = ['team', 'position', 'is_active']
+    list_editable = ['position', 'shirt_number', 'is_active']
+    search_fields = ['name', 'team__name', 'team__code']
+    ordering      = ['team__name', 'position', 'name']
