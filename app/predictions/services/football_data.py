@@ -11,10 +11,13 @@ Nota sobre squads/jugadores:
   Django admin (ve a /admin/predictions/player/).  La función sync_players()
   está lista para ejecutarse una vez que el API key tenga acceso.
 """
+import logging
 import os
 from datetime import date
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 BASE_URL = "https://api.football-data.org/v4"
@@ -80,6 +83,105 @@ def api_group_to_letter(group):
     if not group or not group.startswith("GROUP_"):
         return ""
     return group.replace("GROUP_", "")
+
+
+# ── Match sync ───────────────────────────────────────────────────────────────
+
+def sync_world_cup_matches() -> dict:
+    """
+    Pull World Cup matches from Football-Data.org and upsert into the DB.
+
+    - Creates matches that don't exist yet (by external_id).
+    - Merges API data into fixture-seeded matches that lack an external_id
+      by matching on (match_datetime, home_team, away_team).
+    - Updates scores/status on already-known matches.
+
+    Returns {"created": int, "updated": int, "score_updated": int, "skipped": int}.
+    Raises FootballDataError on API failures.
+    """
+    from django.utils.dateparse import parse_datetime
+    from predictions.models import Match, Team  # local import to avoid circular
+
+    matches_data = get_world_cup_matches()
+    teams_by_code = {t.code: t for t in Team.objects.all()}
+
+    created = updated = score_updated = skipped = 0
+
+    for m in matches_data:
+        external_id = m["id"]
+        utc_date = parse_datetime(m["utcDate"])
+        home_tla = m["homeTeam"].get("tla")
+        away_tla = m["awayTeam"].get("tla")
+
+        home_code = api_tla_to_team_code(home_tla)
+        away_code = api_tla_to_team_code(away_tla)
+
+        home_team = teams_by_code.get(home_code) if home_code else None
+        away_team = teams_by_code.get(away_code) if away_code else None
+
+        if home_tla and not home_team:
+            logger.warning("sync_matches: no Team for code=%s (API TLA %s)", home_code, home_tla)
+        if away_tla and not away_team:
+            logger.warning("sync_matches: no Team for code=%s (API TLA %s)", away_code, away_tla)
+
+        stage = api_stage_to_match_stage(m["stage"])
+        group = api_group_to_letter(m.get("group"))
+        status = m.get("status", "")
+        home_score = m["score"]["fullTime"].get("home")
+        away_score = m["score"]["fullTime"].get("away")
+
+        defaults = {
+            "home_team":      home_team,
+            "away_team":      away_team,
+            "match_datetime": utc_date,
+            "stage":          stage,
+            "group":          group,
+            "home_score":     home_score,
+            "away_score":     away_score,
+            "status":         status,
+        }
+
+        existing = Match.objects.filter(external_id=external_id).first()
+
+        if existing is None:
+            # Try to merge with a fixture-seeded match (no external_id yet)
+            candidate = Match.objects.filter(
+                match_datetime=utc_date,
+                home_team=home_team,
+                away_team=away_team,
+                external_id__isnull=True,
+            ).first()
+            if candidate:
+                for k, v in defaults.items():
+                    setattr(candidate, k, v)
+                candidate.external_id = external_id
+                candidate.save()
+                updated += 1
+                if home_score is not None:
+                    score_updated += 1
+            else:
+                Match.objects.create(external_id=external_id, **defaults)
+                created += 1
+        else:
+            changed = False
+            score_changed = False
+            for k, v in defaults.items():
+                if getattr(existing, k) != v:
+                    setattr(existing, k, v)
+                    changed = True
+                    if k in ("home_score", "away_score"):
+                        score_changed = True
+            if changed:
+                existing.save()
+                updated += 1
+                if score_changed:
+                    score_updated += 1
+
+    logger.info(
+        "sync_matches: done — created=%d, updated=%d, score_updated=%d, skipped=%d",
+        created, updated, score_updated, skipped,
+    )
+    return {"created": created, "updated": updated, "score_updated": score_updated, "skipped": skipped}
 
 
 # ── Squad / player sync ───────────────────────────────────────────────────────

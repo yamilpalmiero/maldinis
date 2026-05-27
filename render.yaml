@@ -22,3 +22,7 @@ services:
           property: connectionString
       - key: PYTHON_VERSION
         value: "3.11.0"
+      - key: SYNC_TOKEN
+        generateValue: true
+      - key: FOOTBALL_DATA_API_KEY
+        sync: false

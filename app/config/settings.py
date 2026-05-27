@@ -114,3 +114,8 @@ LOGIN_REDIRECT_URL = "mis_torneos"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 SPECIAL_PREDICTIONS_DEADLINE = make_aware(datetime(2026, 7, 4, 0, 0))
+
+# Token for the automated sync endpoint (POST /api/sync/world-cup/).
+# In production Render generates and manages this value via generateValue: true.
+# Copy it from the Render dashboard to configure the cron-job.org request header.
+SYNC_TOKEN = os.environ.get("SYNC_TOKEN", "")
