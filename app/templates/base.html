@@ -337,6 +337,23 @@
             accent-color: var(--gold);
             cursor: pointer;
         }
+
+        /* ── Deadline notice (predicciones) ── */
+        .deadline-notice {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .deadline-notice--locked {
+            border-color: color-mix(in srgb, var(--gold) 30%, transparent);
+            background: color-mix(in srgb, var(--gold) 6%, transparent);
+            color: var(--text-secondary);
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>

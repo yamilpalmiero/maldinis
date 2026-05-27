@@ -2,7 +2,6 @@ import json
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.conf import settings
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -16,6 +15,7 @@ from .models import (
 from tournaments.models import Tournament, TournamentMember
 from .services.bracket_resolver import resolve_user_bracket
 from .services.scoring import compute_user_score
+from .utils import get_tournament_deadline, require_before_deadline
 
 _GROUPS = list("ABCDEFGHIJKL")
 
@@ -209,6 +209,9 @@ def bracket(request, tournament_id):
             ).select_related("predicted_winner").first()
             champion = bp.predicted_winner if bp else None
 
+    deadline = get_tournament_deadline()
+    is_open  = deadline is None or timezone.now() < deadline
+
     return render(request, "predictions/bracket.html", {
         "tournament":         tournament,
         "grupos_guardados":   grupos_guardados,
@@ -218,11 +221,14 @@ def bracket(request, tournament_id):
         "bracket_right":      bracket_right,
         "final_match":        final_match,
         "champion":           champion,
+        "is_open":            is_open,
+        "deadline":           deadline,
     })
 
 
 @login_required
 @require_POST
+@require_before_deadline
 def bracket_predict(request, tournament_id):
     tournament = get_object_or_404(Tournament, id=tournament_id)
 
@@ -394,6 +400,9 @@ def mis_predicciones(request, tournament_id):
         item for item in third_teams if item["team"].pk not in ranked_pks
     ]
 
+    deadline = get_tournament_deadline()
+    is_open  = deadline is None or timezone.now() < deadline
+
     return render(request, "predictions/mis_predicciones.html", {
         "tournament":        tournament,
         "groups_data":       groups_data,
@@ -403,11 +412,14 @@ def mis_predicciones(request, tournament_id):
         "saved_entries":     saved_entries,
         "unranked_terceros": unranked_terceros,
         "terceros_complete": len(third_teams) == 12,
+        "is_open":           is_open,
+        "deadline":          deadline,
     })
 
 
 @login_required
 @require_POST
+@require_before_deadline
 def save_group_prediction(request, tournament_id, group_letter):
     tournament = get_object_or_404(Tournament, id=tournament_id)
 
@@ -482,6 +494,7 @@ def save_group_prediction(request, tournament_id, group_letter):
 
 @login_required
 @require_POST
+@require_before_deadline
 def save_terceros(request, tournament_id):
     tournament = get_object_or_404(Tournament, id=tournament_id)
 
@@ -564,8 +577,8 @@ def predicciones_especiales(request, tournament_id):
         messages.error(request, "No eres miembro de este torneo.")
         return redirect("mis_torneos")
 
-    deadline = settings.SPECIAL_PREDICTIONS_DEADLINE
-    is_open = timezone.now() < deadline
+    deadline = get_tournament_deadline()
+    is_open  = deadline is None or timezone.now() < deadline
 
     special = SpecialPrediction.objects.filter(
         user=request.user, tournament=tournament,

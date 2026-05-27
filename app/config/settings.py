@@ -1,7 +1,5 @@
 import os
 from pathlib import Path
-from datetime import datetime
-from django.utils.timezone import make_aware
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -112,8 +110,6 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 LOGIN_REDIRECT_URL = "mis_torneos"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
-
-SPECIAL_PREDICTIONS_DEADLINE = make_aware(datetime(2026, 7, 4, 0, 0))
 
 # Token for the automated sync endpoint (POST /api/sync/world-cup/).
 # In production Render generates and manages this value via generateValue: true.

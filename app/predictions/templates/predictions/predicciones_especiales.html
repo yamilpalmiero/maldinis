@@ -111,15 +111,16 @@
 <div class="trofeos-header">
     <p class="page-eyebrow">{{ tournament.name }}</p>
     <h1 class="trofeos-title">Trofeos</h1>
+    {% if deadline %}
     {% if is_open %}
     <p class="trofeos-deadline">
-        Podés modificar tus predicciones hasta el inicio de la fase eliminatoria
-        <strong>({{ deadline|date:"d/m/Y" }})</strong>.
+        Las predicciones cierran el {{ deadline|date:"j \\d\\e F \\d\\e Y" }} a las {{ deadline|date:"H:i" }} UTC.
     </p>
     {% else %}
     <div class="trofeos-locked">
-        🔒 Las predicciones de trofeos están cerradas desde el inicio de la fase eliminatoria.
+        🔒 Las predicciones cerraron el {{ deadline|date:"j \\d\\e F \\d\\e Y" }} a las {{ deadline|date:"H:i" }} UTC.
     </div>
+    {% endif %}
     {% endif %}
 </div>
 

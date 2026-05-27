@@ -322,6 +322,15 @@
 <div class="bracket-header">
     <p class="page-eyebrow">{{ tournament.name }}</p>
     <h1 class="bracket-title">Eliminatorias</h1>
+    {% if deadline %}
+    <div class="deadline-notice{% if not is_open %} deadline-notice--locked{% endif %}" style="max-width:560px">
+        {% if is_open %}
+        Las predicciones cierran el {{ deadline|date:"j \\d\\e F \\d\\e Y" }} a las {{ deadline|date:"H:i" }} UTC.
+        {% else %}
+        🔒 Las predicciones cerraron el {{ deadline|date:"j \\d\\e F \\d\\e Y" }} a las {{ deadline|date:"H:i" }} UTC.
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 
 {% if not bracket_listo %}
@@ -441,8 +450,9 @@
 {% block extra_js %}
 {% if bracket_listo %}
 <script>
-const PREDICT_URL = "{% url 'bracket_predict' tournament.id %}";
-const CSRF = "{{ csrf_token }}";
+const PREDICT_URL      = "{% url 'bracket_predict' tournament.id %}";
+const CSRF             = "{{ csrf_token }}";
+const PREDICTIONS_OPEN = {{ is_open|yesno:"true,false" }};
 
 // ── Toasts ───────────────────────────────────────────────────────────────────
 let _topToastTimer = null;
@@ -563,6 +573,7 @@ function clearMatchPrediction(matchId) {
 
 // ── Click: seleccionar o cambiar ganador ─────────────────────────────────────
 document.addEventListener('click', function(e) {
+    if (!PREDICTIONS_OPEN) return;
     const slot = e.target.closest('.bracket-slot--filled');
     if (!slot) return;
 

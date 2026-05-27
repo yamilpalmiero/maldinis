@@ -389,6 +389,16 @@
     </div>
 </div>
 
+{% if deadline %}
+<div class="deadline-notice{% if not is_open %} deadline-notice--locked{% endif %}">
+    {% if is_open %}
+    Las predicciones cierran el {{ deadline|date:"j \\d\\e F \\d\\e Y" }} a las {{ deadline|date:"H:i" }} UTC.
+    {% else %}
+    🔒 Las predicciones cerraron el {{ deadline|date:"j \\d\\e F \\d\\e Y" }} a las {{ deadline|date:"H:i" }} UTC.
+    {% endif %}
+</div>
+{% endif %}
+
 {# ══════════════════════════════════════════════════════ GRUPOS #}
 <div class="mp-section">
     <div class="mp-section-header">
@@ -419,8 +429,9 @@
     </div>
 
     <div class="save-groups-row">
-        <button id="btn-save-groups" class="btn-save-groups" onclick="saveAllGroups()">
-            Guardar predicciones de grupos
+        <button id="btn-save-groups" class="btn-save-groups" onclick="saveAllGroups()"
+                {% if not is_open %}disabled{% endif %}>
+            {% if is_open %}Guardar predicciones de grupos{% else %}Predicciones cerradas{% endif %}
         </button>
     </div>
 </div>
@@ -464,8 +475,9 @@
         </ul>
     </div>
     <div class="save-groups-row">
-        <button id="btn-save-terceros" class="btn-save-groups" onclick="saveTerceros()">
-            Guardar ranking de terceros
+        <button id="btn-save-terceros" class="btn-save-groups" onclick="saveTerceros()"
+                {% if not is_open %}disabled{% endif %}>
+            {% if is_open %}Guardar ranking de terceros{% else %}Predicciones cerradas{% endif %}
         </button>
     </div>
     {% endif %}
@@ -478,8 +490,9 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
 <script>
-const TOURNAMENT_ID = {{ tournament.id }};
-const CSRF_TOKEN    = '{{ csrf_token }}';
+const TOURNAMENT_ID    = {{ tournament.id }};
+const CSRF_TOKEN       = '{{ csrf_token }}';
+const PREDICTIONS_OPEN = {{ is_open|yesno:"true,false" }};
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -521,6 +534,7 @@ function updateGroupBadges(listEl) {
 }
 
 async function saveAllGroups() {
+    if (!PREDICTIONS_OPEN) return;
     const btn = document.getElementById('btn-save-groups');
     btn.disabled = true;
     btn.textContent = 'Guardando…';
@@ -555,6 +569,7 @@ document.querySelectorAll('.sortable-group').forEach(list => {
     Sortable.create(list, {
         handle:    '.drag-handle',
         animation: 150,
+        disabled:  !PREDICTIONS_OPEN,
         onEnd() { updateGroupBadges(list); },
     });
 });
@@ -575,6 +590,7 @@ function updateTercerosBadges() {
 }
 
 async function saveTerceros() {
+    if (!PREDICTIONS_OPEN) return;
     const btn = document.getElementById('btn-save-terceros');
     if (!btn || !terceroListEl) return;
     btn.disabled = true;
@@ -606,6 +622,7 @@ if (terceroListEl) {
     Sortable.create(terceroListEl, {
         handle:    '.drag-handle',
         animation: 150,
+        disabled:  !PREDICTIONS_OPEN,
         onEnd() { updateTercerosBadges(); },
     });
 }
