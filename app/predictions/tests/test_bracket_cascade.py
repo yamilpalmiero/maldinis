@@ -37,34 +37,32 @@ class BracketPredictCascadeTest(TestCase):
         cls.t_esp = Team.objects.create(name="España",    code="ESP")
         cls.t_fra = Team.objects.create(name="Francia",   code="FRA")
 
-        # Group predictions para que resolve_user_bracket pueda validar equipos
+        # Group predictions: groups A and B referenced by R32_SOURCES[2] = ("2A", "2B")
+        # m_r32 sits at position 2 → home = group A second (t_bra), away = group B second (t_arg)
         GroupPrediction.objects.create(
             user=cls.user, tournament=cls.tournament,
             group="A", first_team=cls.t_arg, second_team=cls.t_bra,
         )
         GroupPrediction.objects.create(
             user=cls.user, tournament=cls.tournament,
-            group="B", first_team=cls.t_bra, second_team=cls.t_arg,
-        )
-        GroupPrediction.objects.create(
-            user=cls.user, tournament=cls.tournament,
-            group="C", first_team=cls.t_esp,
+            group="B", first_team=cls.t_fra, second_team=cls.t_arg,
         )
 
-        # m_r32: 1A vs 1B → (ARG, BRA)
+        # Two dummy R32 matches occupy positions 0 and 1 (datetimes before m_r32)
+        Match.objects.create(match_datetime=_dt(19),     stage=Match.Stage.ROUND_OF_32)
+        Match.objects.create(match_datetime=_dt(19, 21), stage=Match.Stage.ROUND_OF_32)
+
+        # m_r32 at R32 position 2: R32_SOURCES[2] = ("2A", "2B") → (t_bra, t_arg)
         cls.m_r32 = Match.objects.create(
             match_datetime=_dt(21), stage=Match.Stage.ROUND_OF_32,
-            home_source="1A", away_source="1B",
         )
-        # m_r16: W(m_r32) vs 1C → (ARG, ESP) mientras ARG gana R32
-        cls.m_r16 = Match.objects.create(
-            match_datetime=_dt(26), stage=Match.Stage.ROUND_OF_16,
-            home_source=f"W{cls.m_r32.id}", away_source="1C",
-        )
-        # m_r16_other: sin dependencia sobre m_r32
+        # m_r16_other: R16 position 0 (earlier) → depends on dummy r32[0] and r32[1]
         cls.m_r16_other = Match.objects.create(
+            match_datetime=_dt(26), stage=Match.Stage.ROUND_OF_16,
+        )
+        # m_r16: R16 position 1 (later) → depends on r32[2]=m_r32 and r32[3]=None
+        cls.m_r16 = Match.objects.create(
             match_datetime=_dt(26, 21), stage=Match.Stage.ROUND_OF_16,
-            home_source="1A", away_source="1B",
         )
 
     def setUp(self):

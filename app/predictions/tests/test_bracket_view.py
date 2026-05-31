@@ -199,44 +199,9 @@ class BracketViewIntegrationTest(TestCase):
         # Los segundos de algunos grupos también aparecen via sources "2X"
         self.assertIn("2o_A", html, "El segundo del grupo A ('2o_A') no aparece en el bracket")
 
-    # ── Test 4: bug reproducido — sources vacíos → bracket_error ────────────
+    # ── Test 4: sin grupos ni terceros → bracket_listo=False ─────────────────
 
-    def test_empty_sources_show_bracket_error_not_silent_columns(self):
-        """
-        Reproduce el bug: cuando home_source/away_source están vacíos
-        (DB nueva pre-sync), la view debe devolver bracket_error=True en lugar
-        de renderizar columnas vacías silenciosamente.
-        """
-        match_ids = [m.id for m in self.r32 + self.r16 + self.qf + self.sf + [self.final]]
-        Match.objects.filter(id__in=match_ids).update(home_source="", away_source="")
-
-        resp = self._get()
-        self.assertEqual(resp.status_code, 200)
-        ctx = resp.context
-        # Los prerequisitos siguen cumplidos
-        self.assertTrue(ctx["bracket_listo"])
-        # Pero el bracket no pudo resolverse
-        self.assertTrue(ctx["bracket_error"], "bracket_error debe ser True cuando los sources están vacíos")
-        # Los datos del bracket no se pasan al template
-        self.assertIsNone(ctx["bracket_left"])
-        self.assertIsNone(ctx["bracket_right"])
-
-    # ── Test 5: mensaje de error en HTML ─────────────────────────────────────
-
-    def test_error_message_shown_in_html_when_sources_empty(self):
-        """Cuando hay bracket_error, el HTML muestra el mensaje de error en español."""
-        match_ids = [m.id for m in self.r32 + self.r16 + self.qf + self.sf + [self.final]]
-        Match.objects.filter(id__in=match_ids).update(home_source="", away_source="")
-
-        resp = self._get()
-        html = resp.content.decode()
-
-        self.assertIn("Error al cargar el bracket", html)
-        self.assertNotIn("Tu bracket está vacío", html)
-
-    # ── Test 6: sin grupos ni terceros → bracket_listo=False ─────────────────
-
-    def test_bracket_not_listo_without_predictions(self):
+    def test_4_bracket_not_listo_without_predictions(self):
         """Un usuario sin predicciones ve el estado vacío, no el bracket."""
         other_user = User.objects.create_user("bracket_no_preds", password="pw")
         TournamentMember.objects.create(user=other_user, tournament=self.tournament)

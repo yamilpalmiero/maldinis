@@ -1,3 +1,17 @@
+"""
+Tests for resolve_user_bracket using the positional R32_SOURCES approach.
+
+Matches are resolved purely by chronological position within each stage —
+home_source/away_source DB fields are not read by the resolver.
+
+The test setup creates:
+  R32 positions 0, 1, 2 (sorted by match_datetime)
+  R16 positions 0, 1
+
+Position 0 uses R32_SOURCES[0] = ("1E", "3ABCDF") → group E first + thirds slot
+Position 1 uses R32_SOURCES[1] = ("1I", "3CDFGH") → group I first (missing) + thirds slot
+Position 2 uses R32_SOURCES[2] = ("2A", "2B")     → group A second vs group B second
+"""
 from datetime import datetime, timezone
 
 from django.contrib.auth.models import User
@@ -19,15 +33,17 @@ class ResolveUserBracketTest(TestCase):
         cls.user = User.objects.create_user("tester")
         cls.tournament = Tournament.objects.create(name="Test", created_by=cls.user)
 
-        cls.t_arg = Team.objects.create(name="Argentina", code="ARG")
-        cls.t_bra = Team.objects.create(name="Brasil",    code="BRA")
-        cls.t_fra = Team.objects.create(name="Francia",   code="FRA")
-        cls.t_ger = Team.objects.create(name="Alemania",  code="GER")
-        cls.t_esp = Team.objects.create(name="España",    code="ESP")
+        cls.t_esp = Team.objects.create(name="España",    code="ESP")  # group E first
+        cls.t_arg = Team.objects.create(name="Argentina", code="ARG")  # group A first
+        cls.t_bra = Team.objects.create(name="Brasil",    code="BRA")  # group A second
+        cls.t_fra = Team.objects.create(name="Francia",   code="FRA")  # group B first
+        cls.t_ger = Team.objects.create(name="Alemania",  code="GER")  # group B second
 
-        # Group A: first=ARG, second=BRA
-        # Group B: first=FRA, second=GER
-        # Group C: first=ESP  (second left null)
+        # Groups referenced by R32_SOURCES[0..2]
+        GroupPrediction.objects.create(
+            user=cls.user, tournament=cls.tournament,
+            group="E", first_team=cls.t_esp,
+        )
         GroupPrediction.objects.create(
             user=cls.user, tournament=cls.tournament,
             group="A", first_team=cls.t_arg, second_team=cls.t_bra,
@@ -36,158 +52,96 @@ class ResolveUserBracketTest(TestCase):
             user=cls.user, tournament=cls.tournament,
             group="B", first_team=cls.t_fra, second_team=cls.t_ger,
         )
-        GroupPrediction.objects.create(
-            user=cls.user, tournament=cls.tournament,
-            group="C", first_team=cls.t_esp,
-        )
 
-        # ── Matches ──────────────────────────────────────────────────────────
-        # m_r32_a : 1A  vs 3ABCDF  → (ARG, None)
-        cls.m_r32_a = Match.objects.create(
-            match_datetime=_dt(21), stage=Match.Stage.ROUND_OF_32,
-            home_source="1A", away_source="3ABCDF",
+        # R32 matches: chronological order determines positional index
+        cls.m_r32_0 = Match.objects.create(
+            match_datetime=_dt(21),     stage=Match.Stage.ROUND_OF_32,
         )
-        # m_r32_b : 2A  vs 1B     → (BRA, FRA)
-        cls.m_r32_b = Match.objects.create(
+        cls.m_r32_1 = Match.objects.create(
             match_datetime=_dt(21, 21), stage=Match.Stage.ROUND_OF_32,
-            home_source="2A", away_source="1B",
         )
-        # m_r32_incon : 1A vs 1B  → (ARG, FRA) but bracket pred = GER (inconsistente)
-        cls.m_r32_incon = Match.objects.create(
-            match_datetime=_dt(22), stage=Match.Stage.ROUND_OF_32,
-            home_source="1A", away_source="1B",
+        cls.m_r32_2 = Match.objects.create(
+            match_datetime=_dt(22),     stage=Match.Stage.ROUND_OF_32,
         )
-        # m_missing_group : 1Z vs 2Z  → group Z no existe
-        cls.m_missing_group = Match.objects.create(
-            match_datetime=_dt(23), stage=Match.Stage.ROUND_OF_32,
-            home_source="1Z", away_source="2Z",
+
+        # R16 matches
+        cls.m_r16_0 = Match.objects.create(
+            match_datetime=_dt(26),     stage=Match.Stage.ROUND_OF_16,
         )
-        # m_r16 : W(m_r32_a) vs W(m_r32_b)  → (ARG, FRA) vía bracket preds
-        cls.m_r16 = Match.objects.create(
-            match_datetime=_dt(26), stage=Match.Stage.ROUND_OF_16,
-            home_source=f"W{cls.m_r32_a.id}", away_source=f"W{cls.m_r32_b.id}",
-        )
-        # m_r16_missing : W99999 vs W99998  → no hay bracket pred → (None, None)
-        cls.m_r16_missing = Match.objects.create(
+        cls.m_r16_1 = Match.objects.create(
             match_datetime=_dt(26, 21), stage=Match.Stage.ROUND_OF_16,
-            home_source="W99999", away_source="W99998",
-        )
-        # m_l_null : L(m_r32_a) vs 1C — loser de (ARG, None) ganado por ARG → None
-        cls.m_l_null = Match.objects.create(
-            match_datetime=_dt(27), stage=Match.Stage.ROUND_OF_16,
-            home_source=f"L{cls.m_r32_a.id}", away_source="1C",
-        )
-        # m_r16_incon : L(m_r32_incon) vs 1C — winner inconsistente → None
-        cls.m_r16_incon = Match.objects.create(
-            match_datetime=_dt(27, 21), stage=Match.Stage.ROUND_OF_16,
-            home_source=f"L{cls.m_r32_incon.id}", away_source="1C",
-        )
-        # m_sf : W(m_r16) vs 1C  → (ARG, ESP); user predice ESP → loser = ARG
-        cls.m_sf = Match.objects.create(
-            match_datetime=_dt(29), stage=Match.Stage.SEMI_FINAL,
-            home_source=f"W{cls.m_r16.id}", away_source="1C",
-        )
-        # m_3p : L(m_sf) vs 1B  — para test de loser de SF
-        cls.m_3p = Match.objects.create(
-            match_datetime=_dt(30), stage=Match.Stage.THIRD_PLACE,
-            home_source=f"L{cls.m_sf.id}", away_source="1B",
         )
 
-        # ── Bracket predictions ───────────────────────────────────────────────
+        # Bracket predictions
         BracketPrediction.objects.create(
             user=cls.user, tournament=cls.tournament,
-            match=cls.m_r32_a, predicted_winner=cls.t_arg,
+            match=cls.m_r32_0, predicted_winner=cls.t_esp,
         )
         BracketPrediction.objects.create(
             user=cls.user, tournament=cls.tournament,
-            match=cls.m_r32_b, predicted_winner=cls.t_fra,
-        )
-        # Inconsistente: GER no es ninguno de los equipos resueltos de m_r32_incon
-        BracketPrediction.objects.create(
-            user=cls.user, tournament=cls.tournament,
-            match=cls.m_r32_incon, predicted_winner=cls.t_ger,
-        )
-        BracketPrediction.objects.create(
-            user=cls.user, tournament=cls.tournament,
-            match=cls.m_r16, predicted_winner=cls.t_arg,
-        )
-        # ESP gana la SF → loser = ARG
-        BracketPrediction.objects.create(
-            user=cls.user, tournament=cls.tournament,
-            match=cls.m_sf, predicted_winner=cls.t_esp,
+            match=cls.m_r32_2, predicted_winner=cls.t_bra,
         )
 
-    def _call(self, *matches):
-        return resolve_user_bracket(self.user, self.tournament, list(matches))
+    def _all(self):
+        return [self.m_r32_0, self.m_r32_1, self.m_r32_2, self.m_r16_0, self.m_r16_1]
 
-    # ── Tests ─────────────────────────────────────────────────────────────────
+    # 1. R32 pos 0 home: R32_SOURCES[0] = "1E" → group E first_team
+    def test_1_r32_home_group_winner(self):
+        result = resolve_user_bracket(self.user, self.tournament, self._all())
+        home, _ = result[self.m_r32_0.id]
+        self.assertEqual(home, self.t_esp)
 
-    # 1. "1X" → first_team del grupo X
-    def test_1_group_winner_resolves_first_team(self):
-        result = self._call(self.m_r32_a)
-        home, _ = result[self.m_r32_a.id]
-        self.assertEqual(home, self.t_arg)
-
-    # 2. "2X" → second_team del grupo X
-    def test_2_group_runnerup_resolves_second_team(self):
-        result = self._call(self.m_r32_b)
-        home, _ = result[self.m_r32_b.id]
+    # 2. R32 pos 2 home: R32_SOURCES[2] = "2A" → group A second_team
+    def test_2_r32_home_group_runnerup(self):
+        result = resolve_user_bracket(self.user, self.tournament, self._all())
+        home, _ = result[self.m_r32_2.id]
         self.assertEqual(home, self.t_bra)
 
-    # 3. "3XXXXX" → siempre None
-    def test_3_third_place_source_returns_none(self):
-        result = self._call(self.m_r32_a)
-        _, away = result[self.m_r32_a.id]
+    # 3. R32 pos 2 away: R32_SOURCES[2] = "2B" → group B second_team
+    def test_3_r32_away_group_runnerup(self):
+        result = resolve_user_bracket(self.user, self.tournament, self._all())
+        _, away = result[self.m_r32_2.id]
+        self.assertEqual(away, self.t_ger)
+
+    # 4. R32 pos 0 away: "3ABCDF" → None without ThirdPlaceRanking
+    def test_4_r32_third_slot_none_without_ranking(self):
+        result = resolve_user_bracket(self.user, self.tournament, self._all())
+        _, away = result[self.m_r32_0.id]
         self.assertIsNone(away)
 
-    # 4. "WXX" → predicted_winner del BracketPrediction para match XX
-    def test_4_winner_source_resolves_bracket_prediction(self):
-        result = self._call(self.m_r16)
-        home, away = result[self.m_r16.id]
-        self.assertEqual(home, self.t_arg)  # W(m_r32_a) → ARG
-        self.assertEqual(away, self.t_fra)  # W(m_r32_b) → FRA
+    # 5. R16 pos 1 home: winner of r32[2] → BRA (bracket prediction)
+    def test_5_r16_home_resolves_r32_winner(self):
+        result = resolve_user_bracket(self.user, self.tournament, self._all())
+        home, _ = result[self.m_r16_1.id]
+        self.assertEqual(home, self.t_bra)
 
-    # 5. "LXX" → el equipo de match XX que NO es el predicted_winner
-    def test_5_loser_source_resolves_non_winner(self):
-        # m_sf: (ARG, ESP), user predice ESP → loser = ARG
-        result = self._call(self.m_sf, self.m_3p)
-        home, _ = result[self.m_3p.id]
-        self.assertEqual(home, self.t_arg)
+    # 6. R16 pos 0 home: winner of r32[0] → ESP (bracket prediction)
+    def test_6_r16_home_resolves_r32_winner_chain(self):
+        result = resolve_user_bracket(self.user, self.tournament, self._all())
+        home, _ = result[self.m_r16_0.id]
+        self.assertEqual(home, self.t_esp)
 
-    # 6. GroupPrediction faltante → None
-    def test_6_missing_group_prediction_returns_none(self):
-        result = self._call(self.m_missing_group)
-        home, away = result[self.m_missing_group.id]
+    # 7. Missing group prediction → None (group I has no prediction)
+    def test_7_missing_group_prediction_returns_none(self):
+        result = resolve_user_bracket(self.user, self.tournament, self._all())
+        home, _ = result[self.m_r32_1.id]
         self.assertIsNone(home)
+
+    # 8. Missing bracket prediction → None in downstream R16
+    def test_8_missing_bracket_pred_gives_none_in_r16(self):
+        # r16[0] away = winner of r32[1] — no bracket pred for m_r32_1
+        result = resolve_user_bracket(self.user, self.tournament, self._all())
+        _, away = result[self.m_r16_0.id]
         self.assertIsNone(away)
 
-    # 7. BracketPrediction faltante → None para código W
-    def test_7_missing_bracket_prediction_returns_none(self):
-        result = self._call(self.m_r16_missing)
-        home, away = result[self.m_r16_missing.id]
-        self.assertIsNone(home)
-        self.assertIsNone(away)
-
-    # 8. Cadena completa: group preds → R32 → W codes en R16 resuelve bien
-    #    También verifica exactamente 3 queries (group_preds, bracket_preds, third_ranking).
-    def test_8_full_chain_and_three_queries(self):
-        matches = [self.m_r32_a, self.m_r32_b, self.m_r16]
+    # 9. Exactly 3 DB queries
+    def test_9_exactly_three_queries(self):
         with self.assertNumQueries(3):
-            result = resolve_user_bracket(self.user, self.tournament, matches)
-        self.assertEqual(result[self.m_r32_a.id], (self.t_arg, None))
-        self.assertEqual(result[self.m_r32_b.id], (self.t_bra, self.t_fra))
-        self.assertEqual(result[self.m_r16.id],   (self.t_arg, self.t_fra))
+            resolve_user_bracket(self.user, self.tournament, self._all())
 
-    # 9. "LXX" cuando uno de los equipos resueltos de match XX es None → None
-    def test_9_loser_source_when_one_resolved_team_is_none(self):
-        # m_r32_a → (ARG, None). ARG gana. Loser = None.
-        result = self._call(self.m_r32_a, self.m_l_null)
-        home, _ = result[self.m_l_null.id]
-        self.assertIsNone(home)
-
-    # 10. "LXX" cuando predicted_winner no coincide con ningún equipo resuelto → None
-    def test_10_loser_source_inconsistent_winner_returns_none(self):
-        # m_r32_incon → (ARG, FRA). BracketPred = GER (inválido). L(m_r32_incon) = None.
-        result = self._call(self.m_r32_incon, self.m_r16_incon)
-        home, _ = result[self.m_r16_incon.id]
-        self.assertIsNone(home)
+    # 10. Full chain: r32[2] resolved teams propagate correctly to r16[1]
+    def test_10_full_chain_r32_to_r16(self):
+        result = resolve_user_bracket(self.user, self.tournament, self._all())
+        self.assertEqual(result[self.m_r32_2.id], (self.t_bra, self.t_ger))
+        # r16[1] home = winner(r32[2]) = BRA; away = winner(r32[3]) = None (doesn't exist)
+        self.assertEqual(result[self.m_r16_1.id], (self.t_bra, None))

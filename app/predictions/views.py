@@ -31,32 +31,57 @@ _BRACKET_STAGES = [
 ]
 
 
-def _source_match_id(source):
-    """Return the match.id from a 'W<id>' source code, or None."""
-    if source.startswith("W") and source[1:].isdigit():
-        return int(source[1:])
-    return None
+def _compute_source_ids(knockout_matches):
+    """
+    Returns {match_id: (home_src_id, away_src_id)} derived from positional bracket structure.
+    R32: (None, None). R16[i]: (r32[i*2].id, r32[i*2+1].id). Etc.
+    """
+    by_stage = {}
+    for m in sorted(knockout_matches, key=lambda m: m.match_datetime):
+        by_stage.setdefault(m.stage, []).append(m)
+
+    r32 = by_stage.get(Match.Stage.ROUND_OF_32, [])
+    r16 = by_stage.get(Match.Stage.ROUND_OF_16, [])
+    qf  = by_stage.get(Match.Stage.QUARTER_FINAL, [])
+    sf  = by_stage.get(Match.Stage.SEMI_FINAL, [])
+    fin = by_stage.get(Match.Stage.FINAL, [])
+
+    result = {}
+    for m in r32:
+        result[m.id] = (None, None)
+    for stage_matches, prev in [(r16, r32), (qf, r16), (sf, qf)]:
+        for i, m in enumerate(stage_matches):
+            h = prev[i * 2].id if i * 2 < len(prev) else None
+            a = prev[i * 2 + 1].id if i * 2 + 1 < len(prev) else None
+            result[m.id] = (h, a)
+    for m in fin:
+        result[m.id] = (sf[0].id if sf else None, sf[1].id if len(sf) > 1 else None)
+    return result
 
 
 def _compute_cascade_deletions(user, tournament, changed_match_id, old_winner_team_id):
     """
-    Returns the list of match IDs whose BracketPrediction must be deleted because
-    they depended on old_winner_team_id advancing from changed_match_id.
+    Returns match IDs whose BracketPrediction must be deleted because they depended
+    on old_winner_team_id advancing from changed_match_id.
 
-    Uses the home_source/away_source "W<id>" codes to walk the bracket tree.
-    Does not perform any deletions itself.
+    Uses positional bracket structure — does not read home_source/away_source from DB.
     """
     if old_winner_team_id is None:
         return []
 
-    # Build dependency map: "W<match_id>" → [downstream match_id, ...]
-    dep_map: dict[str, list[int]] = {}
-    for m in Match.objects.filter(stage__in=_BRACKET_STAGES).only("id", "home_source", "away_source"):
-        for src in (m.home_source, m.away_source):
-            if src and src.startswith("W"):
-                dep_map.setdefault(src, []).append(m.id)
+    knockout_matches = list(
+        Match.objects.filter(stage__in=_BRACKET_STAGES)
+        .only("id", "match_datetime", "stage")
+        .order_by("match_datetime")
+    )
+    source_ids = _compute_source_ids(knockout_matches)
 
-    # Current predictions for this user+tournament (may already reflect the change)
+    dep_map: dict[int, list[int]] = {}
+    for m_id, (h_src, a_src) in source_ids.items():
+        for src in (h_src, a_src):
+            if src is not None:
+                dep_map.setdefault(src, []).append(m_id)
+
     user_preds: dict[int, int] = {
         bp.match_id: bp.predicted_winner_id
         for bp in BracketPrediction.objects.filter(user=user, tournament=tournament)
@@ -65,7 +90,7 @@ def _compute_cascade_deletions(user, tournament, changed_match_id, old_winner_te
     to_delete: list[int] = []
 
     def _cascade(match_id: int, team_id: int) -> None:
-        for downstream_id in dep_map.get(f"W{match_id}", []):
+        for downstream_id in dep_map.get(match_id, []):
             if user_preds.get(downstream_id) == team_id:
                 to_delete.append(downstream_id)
                 _cascade(downstream_id, team_id)
@@ -74,60 +99,43 @@ def _compute_cascade_deletions(user, tournament, changed_match_id, old_winner_te
     return to_delete
 
 
-def _build_bracket_halves(all_match_items):
+def _build_bracket_halves(all_match_items, knockout_matches):
     """
-    Split knockout match items into left/right halves based on the Final's
-    home/away source branches. Returns (left, right, final_item).
-
-    left/right are dicts with keys "sf", "qf", "r16", "r32", each a list of
-    items in DFS pre-order (home branch before away branch) — which produces
-    the correct top-to-bottom display order for a TV bracket.
-    Returns (None, None, None) if no Final is found.
+    Split knockout match items into left/right halves positionally.
+    Left: r32[0:8], r16[0:4], qf[0:2], sf[0:1].
+    Right: r32[8:16], r16[4:8], qf[2:4], sf[1:2].
+    Returns (left, right, final_item).
     """
     by_id = {item["match"].id: item for item in all_match_items}
 
-    final_item = next(
-        (item for item in all_match_items if item["match"].stage == Match.Stage.FINAL),
-        None,
-    )
-    if not final_item:
-        return None, None, None
+    by_stage = {}
+    for m in sorted(knockout_matches, key=lambda m: m.match_datetime):
+        by_stage.setdefault(m.stage, []).append(m)
 
-    left_root  = _source_match_id(final_item["match"].home_source)
-    right_root = _source_match_id(final_item["match"].away_source)
+    r32 = by_stage.get(Match.Stage.ROUND_OF_32, [])
+    r16 = by_stage.get(Match.Stage.ROUND_OF_16, [])
+    qf  = by_stage.get(Match.Stage.QUARTER_FINAL, [])
+    sf  = by_stage.get(Match.Stage.SEMI_FINAL, [])
+    fin = by_stage.get(Match.Stage.FINAL, [])
 
-    def _collect(root_id):
-        groups: dict = {}
+    def items(ms):
+        return [by_id[m.id] for m in ms if m.id in by_id]
 
-        def _walk(mid):
-            item = by_id.get(mid)
-            if item is None:
-                return
-            groups.setdefault(item["match"].stage, []).append(item)
-            h = _source_match_id(item["match"].home_source)
-            a = _source_match_id(item["match"].away_source)
-            if h:
-                _walk(h)
-            if a:
-                _walk(a)
+    final_item = items(fin)[0] if fin and fin[0].id in by_id else None
 
-        if root_id:
-            _walk(root_id)
-        return groups
-
-    def _to_half(groups):
-        return {
-            "sf":  groups.get(Match.Stage.SEMI_FINAL,    []),
-            "qf":  groups.get(Match.Stage.QUARTER_FINAL, []),
-            "r16": groups.get(Match.Stage.ROUND_OF_16,   []),
-            "r32": groups.get(Match.Stage.ROUND_OF_32,   []),
-        }
-
-    return (
-        _to_half(_collect(left_root)),
-        _to_half(_collect(right_root)),
-        final_item,
-    )
+    left = {
+        "r32": items(r32[:8]),
+        "r16": items(r16[:4]),
+        "qf":  items(qf[:2]),
+        "sf":  items(sf[:1]),
+    }
+    right = {
+        "r32": items(r32[8:]),
+        "r16": items(r16[4:]),
+        "qf":  items(qf[2:]),
+        "sf":  items(sf[1:]),
+    }
+    return left, right, final_item
 
 
 def _member_or_403(request, tournament):
@@ -194,30 +202,21 @@ def bracket(request, tournament_id):
                 )
             }
 
+            source_ids = _compute_source_ids(knockout_matches)
             all_items = []
             for match in knockout_matches:
                 home, away = resolved.get(match.id, (None, None))
+                h_src_id, a_src_id = source_ids.get(match.id, (None, None))
                 all_items.append({
                     "match":                match,
                     "home":                 home,
                     "away":                 away,
-                    "home_source_match_id": _source_match_id(match.home_source),
-                    "away_source_match_id": _source_match_id(match.away_source),
+                    "home_source_match_id": h_src_id,
+                    "away_source_match_id": a_src_id,
                     "winner_id":            winner_map.get(match.id),
                 })
 
-            bracket_left, bracket_right, final_match = _build_bracket_halves(all_items)
-
-            if knockout_matches and (bracket_left is None or not bracket_left.get("r32")):
-                logger.error(
-                    "bracket: R32 slots empty for user=%s tournament=%s — "
-                    "knockout matches may have empty home_source/away_source "
-                    "(matches=%d, final_found=%s)",
-                    request.user.pk, tournament.pk,
-                    len(knockout_matches), final_match is not None,
-                )
-                bracket_error = True
-                bracket_left = bracket_right = final_match = None
+            bracket_left, bracket_right, final_match = _build_bracket_halves(all_items, knockout_matches)
 
             if final_match and not bracket_error:
                 bp = BracketPrediction.objects.filter(

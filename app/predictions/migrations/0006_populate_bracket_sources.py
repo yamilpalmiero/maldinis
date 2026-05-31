@@ -1,4 +1,9 @@
-# Pobla home_source/away_source en los 32 partidos de eliminatoria según
+# DEPRECATED: home_source/away_source are no longer used for bracket resolution.
+# The bracket is resolved at runtime from hardcoded R32_SOURCES in
+# predictions/services/bracket_resolver.py. This migration is kept to preserve
+# migration history; the data it populates is no longer consumed by the app.
+#
+# Original purpose: Pobla home_source/away_source en los 32 partidos de eliminatoria según
 # el bracket oficial FIFA 2026 (Annex C de las regulaciones del torneo).
 #
 # Los 32 partidos corresponden a los match numbers oficiales FIFA 73-104:

@@ -13,10 +13,18 @@ from tournaments.models import Tournament
 
 logger = logging.getLogger(__name__)
 
-# Maps the winner-group letter (from home_source "1X") to the key used in
-# THIRD_PLACE_COMBINATIONS for that R32 third-place slot.
-# Derived from FIFA 2026 bracket: the 8 R32 "vs best third" slots each host
-# a specific group winner (1A, 1B, 1D, 1E, 1G, 1I, 1K, 1L).
+# FIFA 2026 R32 bracket structure (M73–M88). Position index = chronological order.
+# home_src: "1X" (group X winner) or "2X" (group X runner-up)
+# away_src: "2X" or "3XXXXX" (third-place slot keyed by qualifying groups)
+R32_SOURCES: list[tuple[str, str]] = [
+    ("1E", "3ABCDF"), ("1I", "3CDFGH"), ("2A", "2B"),    ("1F", "2C"),
+    ("2K", "2L"),     ("1H", "2J"),     ("1D", "3BEFIJ"), ("1G", "3AEHIJ"),
+    ("1C", "2F"),     ("2E", "2I"),     ("1A", "3CEFHI"), ("1L", "3EHIJK"),
+    ("1J", "2H"),     ("2D", "2G"),     ("1B", "3EFGIJ"), ("1K", "3DEIJL"),
+]
+
+# Maps winner-group letter (from R32_SOURCES home_src "1X") to the key used in
+# THIRD_PLACE_COMBINATIONS for that slot.
 _WINNER_GROUP_TO_COMBO_KEY: dict[str, str] = {
     "A": "79", "B": "85", "D": "81", "E": "74",
     "G": "82", "I": "77", "K": "87", "L": "80",
@@ -29,15 +37,14 @@ def resolve_user_bracket(
     knockout_matches: Iterable[Match],
 ) -> dict[int, tuple[Team | None, Team | None]]:
     """
-    Returns {match.id: (home_team, away_team)} for each match in
-    knockout_matches, resolved from the user's group and bracket predictions.
+    Returns {match.id: (home_team, away_team)} for each knockout match,
+    resolved from the user's group and bracket predictions.
 
-    Either team may be None when a prediction is missing.
-
-    Makes at most 3 DB queries. The caller must supply knockout_matches in
-    chronological order (which is topological for the bracket dependency chain).
+    Uses hardcoded FIFA 2026 R32 structure — does not read home_source/away_source from DB.
+    Matches are sorted chronologically within each stage to determine positions.
+    Makes exactly 3 DB queries.
     """
-    matches = list(knockout_matches)
+    matches = sorted(knockout_matches, key=lambda m: m.match_datetime)
 
     # Query 1: all group predictions for this user+tournament
     group_map: dict[str, GroupPrediction] = {
@@ -55,38 +62,70 @@ def resolve_user_bracket(
         ).select_related("predicted_winner")
     }
 
-    # Query 3: third-place slot map for "3XXXXX" away sources (R32 only)
-    third_slot_map = _build_third_slot_map(user, tournament, group_map, matches)
+    # Query 3: third-place slot map for R32 slots with "3XXXXX" away sources
+    third_slot_map = _build_third_slot_map(user, tournament, group_map)
+
+    # Group matches by stage, preserving chronological order (already sorted above)
+    stage_matches: dict = {}
+    for m in matches:
+        stage_matches.setdefault(m.stage, []).append(m)
+
+    r32 = stage_matches.get(Match.Stage.ROUND_OF_32, [])
+    r16 = stage_matches.get(Match.Stage.ROUND_OF_16, [])
+    qf  = stage_matches.get(Match.Stage.QUARTER_FINAL, [])
+    sf  = stage_matches.get(Match.Stage.SEMI_FINAL, [])
+    fin = stage_matches.get(Match.Stage.FINAL, [])
 
     resolved: dict[int, tuple[Team | None, Team | None]] = {}
 
-    for match in matches:
-        home = _resolve_source(match.home_source, group_map, bracket_map, resolved)
+    # R32: positional source from hardcoded R32_SOURCES
+    for i, match in enumerate(r32):
+        if i >= len(R32_SOURCES):
+            resolved[match.id] = (None, None)
+            continue
+        home_src, away_src = R32_SOURCES[i]
+        home = _resolve_group_source(home_src, group_map)
+        away = third_slot_map.get(i) if away_src.startswith("3") else _resolve_group_source(away_src, group_map)
+        resolved[match.id] = (home, away)
 
-        if match.away_source.startswith("3") and len(match.away_source) > 2:
-            away = third_slot_map.get(str(match.id))
-        else:
-            away = _resolve_source(match.away_source, group_map, bracket_map, resolved)
+    # R16, QF, SF: positional pairing — match[i] receives winners of prev[i*2] and prev[i*2+1]
+    for current, prev in [(r16, r32), (qf, r16), (sf, qf)]:
+        for i, match in enumerate(current):
+            home = bracket_map.get(prev[i * 2].id) if i * 2 < len(prev) else None
+            away = bracket_map.get(prev[i * 2 + 1].id) if i * 2 + 1 < len(prev) else None
+            resolved[match.id] = (home, away)
 
+    # Final: winners of sf[0] and sf[1]
+    for match in fin:
+        home = bracket_map.get(sf[0].id) if sf else None
+        away = bracket_map.get(sf[1].id) if len(sf) > 1 else None
         resolved[match.id] = (home, away)
 
     return resolved
+
+
+def _resolve_group_source(source: str, group_map: dict) -> Team | None:
+    """Resolve '1X' (winner) or '2X' (runner-up) to a team from group_map."""
+    if len(source) == 2 and source[0] in "12" and source[1].isalpha():
+        gp = group_map.get(source[1])
+        if gp is None:
+            return None
+        return gp.first_team if source[0] == "1" else gp.second_team
+    return None
 
 
 def _build_third_slot_map(
     user: User,
     tournament: Tournament,
     group_map: dict[str, GroupPrediction],
-    matches: list[Match],
-) -> dict[str, Team]:
+) -> dict[int, Team]:
     """
-    Returns {str(match.id): team} for R32 slots with "3XXXXX" away sources,
-    using the user's top-8 ranked thirds and the FIFA Annex C table.
+    Returns {r32_position_index: team} for each R32 slot with a third-place away source,
+    using the user's ThirdPlaceRanking and FIFA Annex C combinations.
 
-    Returns empty dict if the user has fewer than 8 ranked thirds, or if the
-    resulting group combination is absent from THIRD_PLACE_COMBINATIONS.
+    Returns empty dict if fewer than 8 thirds are ranked or the combination is unknown.
     """
-    # Query 3: top 8 ranked thirds ordered by position
+    # Query 3
     entries = list(
         ThirdPlaceRankingEntry.objects
         .filter(ranking__user=user, ranking__tournament=tournament)
@@ -96,24 +135,22 @@ def _build_third_slot_map(
     if len(entries) < 8:
         return {}
 
-    # Map team_id → source group (from group_map third_team predictions)
     team_to_group: dict[int, str] = {
         gp.third_team_id: gp.group
         for gp in group_map.values()
         if gp.third_team_id is not None
     }
 
-    # Determine the 8 qualifying groups from the ranked entries
     qualified_groups_list: list[str] = []
     for entry in entries:
         group = team_to_group.get(entry.team_id)
         if group is None:
-            return {}  # ranked third not found in group predictions
+            return {}
         qualified_groups_list.append(group)
 
     qualified_groups = frozenset(qualified_groups_list)
     if len(qualified_groups) != 8:
-        return {}  # duplicate groups — data inconsistency
+        return {}
 
     combo = THIRD_PLACE_COMBINATIONS.get(qualified_groups)
     if combo is None:
@@ -124,22 +161,19 @@ def _build_third_slot_map(
         )
         return {}
 
-    # Build group → third_team from group_map
     third_team_by_group: dict[str, Team] = {
         gp.group: gp.third_team
         for gp in group_map.values()
         if gp.third_team is not None
     }
 
-    # For each R32 match with a "3XXXXX" away source, map match.id → assigned third
-    slot_map: dict[str, Team] = {}
-    for match in matches:
-        if not (match.away_source.startswith("3") and len(match.away_source) > 2):
+    slot_map: dict[int, Team] = {}
+    for i, (home_src, away_src) in enumerate(R32_SOURCES):
+        if not away_src.startswith("3"):
             continue
-        # home_source is "1X" — extract the winner group letter
-        if len(match.home_source) != 2 or match.home_source[0] != "1":
+        if len(home_src) != 2 or home_src[0] != "1":
             continue
-        winner_group = match.home_source[1]
+        winner_group = home_src[1]
         combo_key = _WINNER_GROUP_TO_COMBO_KEY.get(winner_group)
         if combo_key is None:
             continue
@@ -148,46 +182,6 @@ def _build_third_slot_map(
             continue
         team = third_team_by_group.get(src_group)
         if team is not None:
-            slot_map[str(match.id)] = team
+            slot_map[i] = team
 
     return slot_map
-
-
-def _resolve_source(
-    source: str,
-    group_map: dict[str, GroupPrediction],
-    bracket_map: dict[int, Team],
-    resolved: dict[int, tuple[Team | None, Team | None]],
-) -> Team | None:
-    if not source:
-        return None
-
-    # "1X" / "2X" — group winner or runner-up
-    if len(source) == 2 and source[0] in "12" and source[1].isalpha():
-        gp = group_map.get(source[1])
-        if gp is None:
-            return None
-        return gp.first_team if source[0] == "1" else gp.second_team
-
-    # "WXX" — winner of match XX (user's bracket prediction)
-    if source.startswith("W"):
-        return bracket_map.get(int(source[1:]))
-
-    # "LXX" — loser of match XX
-    if source.startswith("L"):
-        match_id = int(source[1:])
-        winner = bracket_map.get(match_id)
-        if winner is None:
-            return None
-        prior = resolved.get(match_id)
-        if prior is None:
-            return None
-        home, away = prior
-        if home is not None and winner.pk == home.pk:
-            return away
-        if away is not None and winner.pk == away.pk:
-            return home
-        # Inconsistent state: predicted winner not among the resolved teams
-        return None
-
-    return None
