@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -16,6 +17,8 @@ from tournaments.models import Tournament, TournamentMember
 from .services.bracket_resolver import resolve_user_bracket
 from .services.scoring import compute_user_score
 from .utils import get_tournament_deadline, require_before_deadline
+
+logger = logging.getLogger(__name__)
 
 _GROUPS = list("ABCDEFGHIJKL")
 
@@ -172,42 +175,62 @@ def bracket(request, tournament_id):
     bracket_listo = grupos_guardados and terceros_guardados
 
     bracket_left = bracket_right = final_match = champion = None
+    bracket_error = False
 
     if bracket_listo:
-        knockout_matches = list(
-            Match.objects.filter(stage__in=_BRACKET_STAGES)
-            .select_related("home_team", "away_team")
-            .order_by("match_datetime")
-        )
-        resolved = resolve_user_bracket(request.user, tournament, knockout_matches)
-
-        winner_map = {
-            bp.match_id: bp.predicted_winner_id
-            for bp in BracketPrediction.objects.filter(
-                user=request.user, tournament=tournament,
-                match__stage__in=_BRACKET_STAGES,
+        try:
+            knockout_matches = list(
+                Match.objects.filter(stage__in=_BRACKET_STAGES)
+                .select_related("home_team", "away_team")
+                .order_by("match_datetime")
             )
-        }
+            resolved = resolve_user_bracket(request.user, tournament, knockout_matches)
 
-        all_items = []
-        for match in knockout_matches:
-            home, away = resolved.get(match.id, (None, None))
-            all_items.append({
-                "match":                match,
-                "home":                 home,
-                "away":                 away,
-                "home_source_match_id": _source_match_id(match.home_source),
-                "away_source_match_id": _source_match_id(match.away_source),
-                "winner_id":            winner_map.get(match.id),
-            })
+            winner_map = {
+                bp.match_id: bp.predicted_winner_id
+                for bp in BracketPrediction.objects.filter(
+                    user=request.user, tournament=tournament,
+                    match__stage__in=_BRACKET_STAGES,
+                )
+            }
 
-        bracket_left, bracket_right, final_match = _build_bracket_halves(all_items)
+            all_items = []
+            for match in knockout_matches:
+                home, away = resolved.get(match.id, (None, None))
+                all_items.append({
+                    "match":                match,
+                    "home":                 home,
+                    "away":                 away,
+                    "home_source_match_id": _source_match_id(match.home_source),
+                    "away_source_match_id": _source_match_id(match.away_source),
+                    "winner_id":            winner_map.get(match.id),
+                })
 
-        if final_match:
-            bp = BracketPrediction.objects.filter(
-                user=request.user, tournament=tournament, match=final_match["match"]
-            ).select_related("predicted_winner").first()
-            champion = bp.predicted_winner if bp else None
+            bracket_left, bracket_right, final_match = _build_bracket_halves(all_items)
+
+            if knockout_matches and (bracket_left is None or not bracket_left.get("r32")):
+                logger.error(
+                    "bracket: R32 slots empty for user=%s tournament=%s — "
+                    "knockout matches may have empty home_source/away_source "
+                    "(matches=%d, final_found=%s)",
+                    request.user.pk, tournament.pk,
+                    len(knockout_matches), final_match is not None,
+                )
+                bracket_error = True
+                bracket_left = bracket_right = final_match = None
+
+            if final_match and not bracket_error:
+                bp = BracketPrediction.objects.filter(
+                    user=request.user, tournament=tournament, match=final_match["match"]
+                ).select_related("predicted_winner").first()
+                champion = bp.predicted_winner if bp else None
+
+        except Exception:
+            logger.error(
+                "bracket: unexpected error resolving bracket for user=%s tournament=%s",
+                request.user.pk, tournament.pk, exc_info=True,
+            )
+            bracket_error = True
 
     deadline = get_tournament_deadline()
     is_open  = deadline is None or timezone.now() < deadline
@@ -217,6 +240,7 @@ def bracket(request, tournament_id):
         "grupos_guardados":   grupos_guardados,
         "terceros_guardados": terceros_guardados,
         "bracket_listo":      bracket_listo,
+        "bracket_error":      bracket_error,
         "bracket_left":       bracket_left,
         "bracket_right":      bracket_right,
         "final_match":        final_match,

@@ -333,7 +333,13 @@
     {% endif %}
 </div>
 
-{% if not bracket_listo %}
+{% if bracket_error %}
+<div class="bracket-empty">
+    <span class="bracket-empty-icon">⚠</span>
+    <h2 class="bracket-empty-title">Error al cargar el bracket</h2>
+    <p class="bracket-empty-msg">No se pudieron cargar los partidos de eliminatorias. Los datos del torneo se sincronizan automáticamente — volvé a intentar en unos minutos.</p>
+</div>
+{% elif not bracket_listo %}
 <div class="bracket-empty">
     <span class="bracket-empty-icon">🏆</span>
     <h2 class="bracket-empty-title">Tu bracket está vacío</h2>
@@ -448,7 +454,7 @@
 {% endblock %}
 
 {% block extra_js %}
-{% if bracket_listo %}
+{% if bracket_listo and not bracket_error %}
 <script>
 const PREDICT_URL      = "{% url 'bracket_predict' tournament.id %}";
 const CSRF             = "{{ csrf_token }}";

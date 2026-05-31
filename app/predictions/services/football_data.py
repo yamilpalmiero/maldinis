@@ -87,6 +87,75 @@ def api_group_to_letter(group):
 
 # ── Match sync ───────────────────────────────────────────────────────────────
 
+_KNOCKOUT_STAGES = ["R32", "R16", "QF", "SF", "3P", "F"]
+
+_R32_SOURCES = [
+    ("1E", "3ABCDF"), ("1I", "3CDFGH"), ("2A", "2B"),    ("1F", "2C"),
+    ("2K", "2L"),     ("1H", "2J"),     ("1D", "3BEFIJ"), ("1G", "3AEHIJ"),
+    ("1C", "2F"),     ("2E", "2I"),     ("1A", "3CEFHI"), ("1L", "3EHIJK"),
+    ("1J", "2H"),     ("2D", "2G"),     ("1B", "3EFGIJ"), ("1K", "3DEIJL"),
+]
+
+
+def _ensure_bracket_sources(Match) -> int:
+    """
+    Populate home_source/away_source on knockout matches when they are empty.
+
+    Called after sync_world_cup_matches() to fix the race condition where the
+    data migration (0006_populate_bracket_sources) runs on a fresh DB before
+    the first Football-Data.org sync creates the knockout matches.
+
+    Assumes 32 knockout matches exist and are ordered chronologically (M73-M104).
+    Sources for R16 onward use the actual DB IDs of the R32/R16/QF/SF matches.
+    """
+    matches = list(
+        Match.objects.filter(stage__in=_KNOCKOUT_STAGES)
+        .order_by("match_datetime")
+    )
+
+    if len(matches) != 32:
+        if matches:
+            logger.warning(
+                "bracket_sources: expected 32 knockout matches, found %d — skipping source population",
+                len(matches),
+            )
+        return 0
+
+    if all(m.home_source and m.away_source for m in matches):
+        return 0
+
+    r32 = matches[:16]
+    r16 = matches[16:24]
+    qf  = matches[24:28]
+    sf  = matches[28:30]
+    m3p = matches[30]
+    fin = matches[31]
+
+    computed: list[tuple] = []
+    for m, (hs, as_) in zip(r32, _R32_SOURCES):
+        computed.append((m, hs, as_))
+    for i, m in enumerate(r16):
+        computed.append((m, f"W{r32[i * 2].id}", f"W{r32[i * 2 + 1].id}"))
+    for i, m in enumerate(qf):
+        computed.append((m, f"W{r16[i * 2].id}", f"W{r16[i * 2 + 1].id}"))
+    for i, m in enumerate(sf):
+        computed.append((m, f"W{qf[i * 2].id}", f"W{qf[i * 2 + 1].id}"))
+    computed.append((m3p, f"L{sf[0].id}", f"L{sf[1].id}"))
+    computed.append((fin, f"W{sf[0].id}", f"W{sf[1].id}"))
+
+    updated = 0
+    for match, home_src, away_src in computed:
+        if not match.home_source or not match.away_source:
+            match.home_source = home_src
+            match.away_source = away_src
+            match.save(update_fields=["home_source", "away_source"])
+            updated += 1
+
+    if updated:
+        logger.info("bracket_sources: populated sources for %d knockout matches", updated)
+    return updated
+
+
 def sync_world_cup_matches() -> dict:
     """
     Pull World Cup matches from Football-Data.org and upsert into the DB.
@@ -176,6 +245,8 @@ def sync_world_cup_matches() -> dict:
                 updated += 1
                 if score_changed:
                     score_updated += 1
+
+    _ensure_bracket_sources(Match)
 
     logger.info(
         "sync_matches: done — created=%d, updated=%d, score_updated=%d, skipped=%d",
