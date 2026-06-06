@@ -116,55 +116,6 @@
     .ranking-row.is-me { background: var(--gold-subtle); }
     .ranking-row.is-me:hover { background: var(--gold-subtle); }
 
-    /* ── Predicciones especiales ── */
-    .special-section {
-        margin-top: 40px;
-        border-top: 1px solid var(--border);
-        padding-top: 28px;
-    }
-
-    .special-title {
-        font-family: 'Barlow Condensed', sans-serif;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--gold);
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 16px;
-    }
-
-    .special-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .special-table th {
-        font-family: 'Barlow Condensed', sans-serif;
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--gold);
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        padding: 0 12px 10px;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .special-table td {
-        padding: 12px;
-        font-size: 14px;
-        border-bottom: 0.5px solid var(--border);
-        color: var(--text-secondary);
-    }
-
-    .special-table tr:last-child td { border-bottom: none; }
-
-    .special-empty {
-        font-size: 13px;
-        color: var(--text-muted);
-        font-style: italic;
-    }
-
     .empty-state {
         text-align: center;
         padding: 60px 0;
@@ -216,40 +167,6 @@
         {% endfor %}
     </tbody>
 </table>
-
-<!-- Trofeos del grupo -->
-<div class="special-section">
-    <div class="special-title">Trofeos</div>
-    {% if special_predictions %}
-    <table class="special-table">
-        <thead>
-            <tr>
-                <th>Jugador</th>
-                <th>🏆 Balón de Oro</th>
-                <th>👟 Bota de Oro</th>
-                <th>🧤 Guante de Oro</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for sp in special_predictions %}
-            <tr>
-                <td>
-                    {{ sp.user.username }}
-                    {% if sp.user == request.user %}
-                    <span style="font-size:11px; color: var(--gold); margin-left: 4px;">tú</span>
-                    {% endif %}
-                </td>
-                <td>{{ sp.golden_ball|default:"—" }}</td>
-                <td>{{ sp.golden_boot|default:"—" }}</td>
-                <td>{{ sp.golden_glove|default:"—" }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p class="special-empty">Ningún miembro ha cargado sus predicciones especiales todavía.</p>
-    {% endif %}
-</div>
 
 {% else %}
 <div class="empty-state">

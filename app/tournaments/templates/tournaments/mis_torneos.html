@@ -113,30 +113,6 @@
         letter-spacing: 2px;
     }
 
-    .special-badges {
-        display: flex;
-        gap: 8px;
-        margin-top: 8px;
-        flex-wrap: wrap;
-    }
-
-    .special-badge {
-        font-size: 11px;
-        color: var(--text-muted);
-        background: var(--bg-input);
-        border: 0.5px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 3px 8px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .special-badge span {
-        color: var(--text-secondary);
-        font-weight: 500;
-    }
-
     .torneo-actions {
         display: flex;
         gap: 8px;
@@ -231,24 +207,10 @@
                 </span>
                 {% endif %}
             </div>
-            {% if item.special %}
-            <div class="special-badges">
-                {% if item.special.golden_ball %}
-                <div class="special-badge">🏆 Balón de Oro: <span>{{ item.special.golden_ball }}</span></div>
-                {% endif %}
-                {% if item.special.golden_boot %}
-                <div class="special-badge">👟 Bota de Oro: <span>{{ item.special.golden_boot }}</span></div>
-                {% endif %}
-                {% if item.special.golden_glove %}
-                <div class="special-badge">🧤 Guante de Oro: <span>{{ item.special.golden_glove }}</span></div>
-                {% endif %}
-            </div>
-            {% endif %}
         </div>
         <div class="torneo-actions">
             <a href="{% url 'mis_predicciones' item.membership.tournament.id %}">Grupos</a>
             <a href="{% url 'bracket' item.membership.tournament.id %}">Eliminatorias</a>
-            <a href="{% url 'predicciones_especiales' item.membership.tournament.id %}">Trofeos</a>
             <a href="{% url 'ranking' item.membership.tournament.id %}">Ranking</a>
             {% if item.membership.role == 'ADMIN' %}
             <form method="post" action="{% url 'eliminar_torneo' item.membership.tournament.id %}" onsubmit="return confirm('¿Eliminar el torneo {{ item.membership.tournament.name }}? Esta acción no se puede deshacer.')">

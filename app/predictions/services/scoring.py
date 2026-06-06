@@ -8,7 +8,7 @@ All three scoreable categories are computed on-demand from Match results:
                                     + 1 pt bonus for exact position.
   - Bracket (BracketPrediction):    2/4/8/16/42 pts by round.
 
-Trophy scoring (SpecialPrediction) is deferred; it contributes 0 for now.
+SpecialPrediction (trophies) is kept in the DB but excluded from scoring.
 
 Limitations
 -----------

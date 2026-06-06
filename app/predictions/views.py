@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .models import (
-    Match, SpecialPrediction, GroupPrediction,
+    Match, GroupPrediction,
     ThirdPlaceRanking, ThirdPlaceRankingEntry, BracketPrediction,
 )
 from tournaments.models import Tournament, TournamentMember
@@ -581,53 +581,9 @@ def ranking(request, tournament_id):
     for i, item in enumerate(entries, start=1):
         item["position"] = i
 
-    special_predictions = SpecialPrediction.objects.filter(
-        tournament=tournament, user__in=[m.user for m in members]
-    ).select_related("user")
-
     return render(request, "predictions/ranking.html", {
-        "tournament":          tournament,
-        "ranking_list":        entries,
-        "special_predictions": special_predictions,
-    })
-
-
-@login_required
-def predicciones_especiales(request, tournament_id):
-    tournament = get_object_or_404(Tournament, id=tournament_id)
-
-    if not _member_or_403(request, tournament):
-        messages.error(request, "No eres miembro de este torneo.")
-        return redirect("mis_torneos")
-
-    deadline = get_tournament_deadline()
-    is_open  = deadline is None or timezone.now() < deadline
-
-    special = SpecialPrediction.objects.filter(
-        user=request.user, tournament=tournament,
-    ).first()
-
-    if request.method == "POST" and is_open:
-        golden_ball  = request.POST.get("golden_ball",  "").strip()
-        golden_boot  = request.POST.get("golden_boot",  "").strip()
-        golden_glove = request.POST.get("golden_glove", "").strip()
-        SpecialPrediction.objects.update_or_create(
-            user=request.user,
-            tournament=tournament,
-            defaults={
-                "golden_ball":  golden_ball,
-                "golden_boot":  golden_boot,
-                "golden_glove": golden_glove,
-            },
-        )
-        messages.success(request, "¡Predicciones especiales guardadas!")
-        return redirect("predicciones_especiales", tournament_id=tournament_id)
-
-    return render(request, "predictions/predicciones_especiales.html", {
-        "tournament": tournament,
-        "special":    special,
-        "is_open":    is_open,
-        "deadline":   deadline,
+        "tournament":   tournament,
+        "ranking_list": entries,
     })
 
 

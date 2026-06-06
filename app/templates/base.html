@@ -375,7 +375,6 @@
             {% if tournament %}
             <a href="{% url 'mis_predicciones' tournament.id %}">Grupos</a>
             <a href="{% url 'bracket' tournament.id %}">Eliminatorias</a>
-            <a href="{% url 'predicciones_especiales' tournament.id %}">Trofeos</a>
             <a href="{% url 'ranking' tournament.id %}">Ranking</a>
             {% endif %}
         </div>
@@ -424,14 +423,10 @@
                     <span>Campeón del Mundial</span>
                     <span class="rule-points">42 pts</span>
                 </li>
-                <li>
-                    <span>Balón / Bota / Guante de Oro</span>
-                    <span class="rule-points">15 / 10 / 5 pts</span>
-                </li>
             </ul>
 
             <p style="color: var(--text-muted); font-size: 13px; margin-top: 20px; line-height: 1.5;">
-                Todas las predicciones (grupos, terceros, bracket y trofeos) cierran al inicio del primer partido del Mundial.
+                Todas las predicciones (grupos, terceros y bracket) cierran al inicio del primer partido del Mundial.
             </p>
             <p style="color: var(--text-muted); font-size: 13px; margin-top: 12px; line-height: 1.5;">
                 Si marcás "No volver a mostrar", siempre podrás consultar el reglamento desde el enlace en la parte superior izquierda.

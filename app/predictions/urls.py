@@ -8,6 +8,5 @@ urlpatterns = [
     path('torneo/<int:tournament_id>/mis-predicciones/grupo/<str:group_letter>/', views.save_group_prediction, name='save_group_prediction'),
     path('torneo/<int:tournament_id>/mis-predicciones/terceros/', views.save_terceros, name='save_terceros'),
     path('torneo/<int:tournament_id>/ranking/', views.ranking, name='ranking'),
-    path('torneo/<int:tournament_id>/predicciones-especiales/', views.predicciones_especiales, name='predicciones_especiales'),
     path('', views.home, name='home'),
 ]

@@ -2,7 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
-from predictions.models import SpecialPrediction
 from .models import Tournament, TournamentMember
 
 
@@ -12,21 +11,10 @@ def mis_torneos(request):
         user=request.user
     ).select_related('tournament'))
 
-    tournament_ids = [m.tournament.id for m in memberships]
-
-    special_predictions = SpecialPrediction.objects.filter(
-        user=request.user,
-        tournament_id__in=tournament_ids
-    )
-    special_map = {sp.tournament_id: sp for sp in special_predictions}
-
-    memberships_data = []
-    for membership in memberships:
-        sp = special_map.get(membership.tournament.id)
-        memberships_data.append({
-            'membership': membership,
-            'special': sp,
-        })
+    memberships_data = [
+        {'membership': m}
+        for m in memberships
+    ]
 
     return render(request, 'tournaments/mis_torneos.html', {
         'memberships_data': memberships_data,
