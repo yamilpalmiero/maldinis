@@ -950,7 +950,7 @@ class RankingFinalPicksTest(TestCase):
         self.assertContains(resp, "—")
 
     def test_html_incluye_url_de_bandera_argentina(self):
-        """La bandera de Argentina (flagcdn.com/w32/ar.png) aparece en el HTML."""
+        """La bandera de Argentina (flagcdn.com/w40/ar.png) aparece en el HTML."""
         resp = self.client.get(reverse("ranking", args=[self.t.id]))
         self.assertContains(resp, "flagcdn.com")
         self.assertContains(resp, "/ar.png")

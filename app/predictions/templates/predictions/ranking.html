@@ -188,7 +188,7 @@
             <td class="rank-breakdown col-breakdown">{{ item.score.bracket }}</td>
             <td>
                 {% if item.champion %}
-                {% flag_url item.champion.code 32 as champ_flag %}
+                {% flag_url item.champion.code 40 as champ_flag %}
                 <div class="rank-final-pick">
                     {% if champ_flag %}<img src="{{ champ_flag }}" alt="">{% endif %}
                     <span>{{ item.champion.name }}</span>
@@ -199,7 +199,7 @@
             </td>
             <td>
                 {% if item.runner_up %}
-                {% flag_url item.runner_up.code 32 as runner_flag %}
+                {% flag_url item.runner_up.code 40 as runner_flag %}
                 <div class="rank-final-pick">
                     {% if runner_flag %}<img src="{{ runner_flag }}" alt="">{% endif %}
                     <span>{{ item.runner_up.name }}</span>
