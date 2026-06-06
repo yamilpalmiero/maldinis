@@ -830,3 +830,127 @@ class MultiTorneoTest(TestCase):
         # other_user NO está en Torneo B
         self.assertIn("multi_user", usernames_b)
         self.assertNotIn("other_user", usernames_b)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 9. RANKING — CAMPEÓN Y SUBCAMPEÓN
+# ─────────────────────────────────────────────────────────────────────────────
+
+class RankingFinalPicksTest(TestCase):
+    """
+    Verifica que el ranking muestre correctamente el campeón y subcampeón
+    predichos por cada usuario, derivados de sus predicciones de Semis + Final.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.argentina = Team.objects.create(name="Argentina", code="ARG")
+        cls.francia   = Team.objects.create(name="Francia",   code="FRA")
+        cls.brasil    = Team.objects.create(name="Brasil",    code="BRA")
+        cls.alemania  = Team.objects.create(name="Alemania",  code="GER")
+
+        # 2 semifinales + 1 final (orden cronológico)
+        cls.sf0 = Match.objects.create(
+            stage=Match.Stage.SEMI_FINAL,
+            match_datetime=_dt(7, 29),
+        )
+        cls.sf1 = Match.objects.create(
+            stage=Match.Stage.SEMI_FINAL,
+            match_datetime=_dt(7, 30),
+        )
+        cls.final_m = Match.objects.create(
+            stage=Match.Stage.FINAL,
+            match_datetime=_dt(8, 1),
+        )
+
+        # user_completo: Argentina gana SF[0], Francia gana SF[1], Argentina campeona
+        # user_incompleto: solo predice Final (Argentina) pero sin SF → runner_up = None
+        # user_sin_preds: sin predicciones de bracket
+        cls.user_completo   = User.objects.create_user("completo",   password="pw")
+        cls.user_incompleto = User.objects.create_user("incompleto", password="pw")
+        cls.user_sin_preds  = User.objects.create_user("sin_preds",  password="pw")
+
+        cls.t = Tournament.objects.create(name="T", created_by=cls.user_completo)
+        for u in [cls.user_completo, cls.user_incompleto, cls.user_sin_preds]:
+            TournamentMember.objects.create(user=u, tournament=cls.t)
+
+        # user_completo: Argentina gana SF[0], Francia gana SF[1], Argentina campeona
+        BracketPrediction.objects.create(
+            user=cls.user_completo, tournament=cls.t,
+            match=cls.sf0, predicted_winner=cls.argentina,
+        )
+        BracketPrediction.objects.create(
+            user=cls.user_completo, tournament=cls.t,
+            match=cls.sf1, predicted_winner=cls.francia,
+        )
+        BracketPrediction.objects.create(
+            user=cls.user_completo, tournament=cls.t,
+            match=cls.final_m, predicted_winner=cls.argentina,
+        )
+
+        # user_incompleto: predice Final pero sin SF
+        BracketPrediction.objects.create(
+            user=cls.user_incompleto, tournament=cls.t,
+            match=cls.final_m, predicted_winner=cls.argentina,
+        )
+
+    def setUp(self):
+        get_tournament_deadline.cache_clear()
+        self.client.login(username="completo", password="pw")
+
+    def _ranking(self):
+        resp = self.client.get(reverse("ranking", args=[self.t.id]))
+        self.assertEqual(resp.status_code, 200)
+        by_user = {item["user"].username: item for item in resp.context["ranking_list"]}
+        return by_user
+
+    # ── Contexto: champion y runner_up ────────────────────────────────────────
+
+    def test_usuario_con_final_completa_tiene_campeon_y_subcampeon(self):
+        picks = self._ranking()["completo"]
+        self.assertIsNotNone(picks["champion"])
+        self.assertEqual(picks["champion"].pk, self.argentina.pk)
+        self.assertIsNotNone(picks["runner_up"])
+        self.assertEqual(picks["runner_up"].pk, self.francia.pk)
+
+    def test_usuario_con_solo_final_tiene_campeon_pero_sin_subcampeon(self):
+        """Sin predicciones de Semis no se puede determinar el subcampeón."""
+        picks = self._ranking()["incompleto"]
+        self.assertIsNotNone(picks["champion"])
+        self.assertEqual(picks["champion"].pk, self.argentina.pk)
+        self.assertIsNone(picks["runner_up"])
+
+    def test_usuario_sin_predicciones_tiene_nulos(self):
+        picks = self._ranking()["sin_preds"]
+        self.assertIsNone(picks["champion"])
+        self.assertIsNone(picks["runner_up"])
+
+    def test_campeon_y_subcampeon_independientes_por_torneo(self):
+        """Predicciones de otro torneo no contaminan."""
+        otro_torneo = Tournament.objects.create(name="Otro", created_by=self.user_completo)
+        TournamentMember.objects.create(user=self.user_completo, tournament=otro_torneo)
+        # Sin predicciones en otro_torneo → champion debe ser None
+        resp = self.client.get(reverse("ranking", args=[otro_torneo.id]))
+        item = resp.context["ranking_list"][0]
+        self.assertIsNone(item["champion"])
+
+    # ── HTML: banderas y nombres ──────────────────────────────────────────────
+
+    def test_html_muestra_nombre_del_campeon(self):
+        resp = self.client.get(reverse("ranking", args=[self.t.id]))
+        self.assertContains(resp, "Argentina")
+
+    def test_html_muestra_nombre_del_subcampeon(self):
+        resp = self.client.get(reverse("ranking", args=[self.t.id]))
+        self.assertContains(resp, "Francia")
+
+    def test_html_muestra_guion_para_usuario_sin_prediccion(self):
+        """El guion "—" aparece para usuarios sin Final predicha."""
+        resp = self.client.get(reverse("ranking", args=[self.t.id]))
+        self.assertContains(resp, "—")
+
+    def test_html_incluye_url_de_bandera_argentina(self):
+        """La bandera de Argentina (flagcdn.com/w32/ar.png) aparece en el HTML."""
+        resp = self.client.get(reverse("ranking", args=[self.t.id]))
+        self.assertContains(resp, "flagcdn.com")
+        self.assertContains(resp, "/ar.png")

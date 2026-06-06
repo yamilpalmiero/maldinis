@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load flag_tags %}
 
 {% block title %}Ranking — Mundial 2026{% endblock %}
 
@@ -116,6 +117,27 @@
     .ranking-row.is-me { background: var(--gold-subtle); }
     .ranking-row.is-me:hover { background: var(--gold-subtle); }
 
+    .rank-final-pick {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .rank-final-pick img {
+        width: 22px;
+        height: auto;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .rank-final-empty {
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
     .empty-state {
         text-align: center;
         padding: 60px 0;
@@ -143,6 +165,8 @@
             <th class="right col-breakdown">Grupos</th>
             <th class="right col-breakdown">Terceros</th>
             <th class="right col-breakdown">Bracket</th>
+            <th>Campeón</th>
+            <th>Subcampeón</th>
             <th class="right">Total</th>
         </tr>
     </thead>
@@ -162,6 +186,28 @@
             <td class="rank-breakdown col-breakdown">{{ item.score.groups }}</td>
             <td class="rank-breakdown col-breakdown">{{ item.score.thirds }}</td>
             <td class="rank-breakdown col-breakdown">{{ item.score.bracket }}</td>
+            <td>
+                {% if item.champion %}
+                {% flag_url item.champion.code 32 as champ_flag %}
+                <div class="rank-final-pick">
+                    {% if champ_flag %}<img src="{{ champ_flag }}" alt="">{% endif %}
+                    <span>{{ item.champion.name }}</span>
+                </div>
+                {% else %}
+                <span class="rank-final-empty">—</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if item.runner_up %}
+                {% flag_url item.runner_up.code 32 as runner_flag %}
+                <div class="rank-final-pick">
+                    {% if runner_flag %}<img src="{{ runner_flag }}" alt="">{% endif %}
+                    <span>{{ item.runner_up.name }}</span>
+                </div>
+                {% else %}
+                <span class="rank-final-empty">—</span>
+                {% endif %}
+            </td>
             <td class="rank-pts">{{ item.score.total }} pts</td>
         </tr>
         {% endfor %}

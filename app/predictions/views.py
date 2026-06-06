@@ -569,14 +569,55 @@ def ranking(request, tournament_id):
         TournamentMember.objects.filter(tournament=tournament).select_related("user")
     )
 
-    entries = [
-        {
-            "user":     m.user,
-            "score":    compute_user_score(m.user, tournament),
-            "initials": m.user.username[:2].upper(),
-        }
-        for m in members
-    ]
+    # Campeón y subcampeón: 1 sola query para todos los miembros
+    final_match = (
+        Match.objects.filter(stage=Match.Stage.FINAL)
+        .only("id").first()
+    )
+    sf_matches = list(
+        Match.objects.filter(stage=Match.Stage.SEMI_FINAL)
+        .only("id", "match_datetime")
+        .order_by("match_datetime")
+    )
+
+    pred_map: dict[tuple[int, int], object] = {}
+    if final_match or sf_matches:
+        match_ids = [m.id for m in sf_matches] + ([final_match.id] if final_match else [])
+        for bp in BracketPrediction.objects.filter(
+            tournament=tournament,
+            user_id__in=[m.user_id for m in members],
+            match_id__in=match_ids,
+        ).select_related("predicted_winner"):
+            pred_map[(bp.user_id, bp.match_id)] = bp.predicted_winner
+
+    sf_ids = [m.id for m in sf_matches]
+
+    def _final_picks(user_id):
+        if not final_match:
+            return None, None
+        champion = pred_map.get((user_id, final_match.id))
+        if champion is None:
+            return None, None
+        sf0 = pred_map.get((user_id, sf_ids[0])) if len(sf_ids) > 0 else None
+        sf1 = pred_map.get((user_id, sf_ids[1])) if len(sf_ids) > 1 else None
+        if sf0 and sf0.pk == champion.pk:
+            runner_up = sf1
+        elif sf1 and sf1.pk == champion.pk:
+            runner_up = sf0
+        else:
+            runner_up = None
+        return champion, runner_up
+
+    entries = []
+    for m in members:
+        champion, runner_up = _final_picks(m.user_id)
+        entries.append({
+            "user":      m.user,
+            "score":     compute_user_score(m.user, tournament),
+            "initials":  m.user.username[:2].upper(),
+            "champion":  champion,
+            "runner_up": runner_up,
+        })
     entries.sort(key=lambda x: x["score"]["total"], reverse=True)
     for i, item in enumerate(entries, start=1):
         item["position"] = i
