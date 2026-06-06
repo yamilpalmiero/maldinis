@@ -15,6 +15,21 @@ ALLOWED_HOSTS = [
     'www.maldinis.app',
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://maldinis.app',
+    'https://www.maldinis.app',
+    'https://maldinis.onrender.com',
+]
+
+# Render usa un reverse proxy que termina HTTPS; sin esto Django no detecta
+# correctamente el esquema y puede rechazar cookies seguras.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# En producción (DEBUG=False) las cookies de sesión y CSRF viajan solo por HTTPS.
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE    = True
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
