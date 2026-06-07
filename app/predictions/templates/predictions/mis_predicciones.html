@@ -378,6 +378,23 @@
         border: 1px solid #6a2a2a;
         color: #eb5757;
     }
+
+    .top-toast.toast-link {
+        pointer-events: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .toast-link-anchor {
+        color: #ffffff;
+        font-weight: 700;
+        text-decoration: underline;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .toast-link-anchor:hover { opacity: 0.85; }
 </style>
 {% endblock %}
 
@@ -509,9 +526,20 @@ function post(url, body) {
 
 function showTopToast(msg, type) {
     const t = document.getElementById('top-toast');
+    clearTimeout(window._topToastTimer);
     t.textContent = msg;
     t.className = 'top-toast toast-' + type + ' visible';
-    setTimeout(() => t.classList.remove('visible'), 3000);
+    window._topToastTimer = setTimeout(() => t.classList.remove('visible'), 3000);
+}
+
+function showLinkToast(msg, linkText, linkUrl) {
+    const t = document.getElementById('top-toast');
+    clearTimeout(window._topToastTimer);
+    t.innerHTML =
+        `<span>${msg}</span>` +
+        `<a href="${linkUrl}" class="toast-link-anchor">${linkText}</a>`;
+    t.className = 'top-toast toast-ok toast-link visible';
+    window._topToastTimer = setTimeout(() => t.classList.remove('visible'), 6000);
 }
 
 // ── Group cards ───────────────────────────────────────────────────────────────
@@ -605,7 +633,15 @@ async function saveTerceros() {
             { order }
         );
         if (data.ok) {
-            showTopToast('Ranking de terceros guardado', 'ok');
+            if (data.bracket_url) {
+                showLinkToast(
+                    '¡Listo! Ahora podés completar tu bracket.',
+                    'Ir a Eliminatorias →',
+                    data.bracket_url
+                );
+            } else {
+                showTopToast('Ranking de terceros guardado', 'ok');
+            }
         } else {
             showTopToast('No se pudo guardar el ranking, intentá de nuevo', 'err');
         }

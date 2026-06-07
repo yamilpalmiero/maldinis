@@ -308,6 +308,22 @@ class TercerosPrediccionesTest(TestCase):
         # Solo 7 válidos → < 8 → 400
         self.assertEqual(resp.status_code, 400)
 
+    def test_guardado_exitoso_retorna_bracket_url(self):
+        """El endpoint devuelve bracket_url cuando los 8 terceros son válidos."""
+        resp = self._save_terceros(THIRDS_ORDER)
+        data = json.loads(resp.content)
+        self.assertTrue(data["ok"])
+        self.assertIn("bracket_url", data)
+        self.assertIn(f"/torneo/{self.t.id}/bracket/", data["bracket_url"])
+
+    def test_guardado_incompleto_no_tiene_bracket_url(self):
+        """Con menos de 8 teams no hay ok ni bracket_url."""
+        resp = self._save_terceros(THIRDS_ORDER[:5])
+        self.assertEqual(resp.status_code, 400)
+        data = json.loads(resp.content)
+        self.assertFalse(data["ok"])
+        self.assertNotIn("bracket_url", data)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. FLUJO BRACKET COMPLETO

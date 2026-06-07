@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
@@ -554,7 +555,10 @@ def save_terceros(request, tournament_id):
         for pos, tid in enumerate(ordered_ids[:8], start=1)
     ])
 
-    return JsonResponse({"ok": True})
+    return JsonResponse({
+        "ok": True,
+        "bracket_url": reverse("bracket", args=[tournament_id]),
+    })
 
 
 @login_required
